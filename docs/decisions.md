@@ -573,3 +573,128 @@ of D23.
   result of D23 stays in the repository and in the report.
 - Code: `configs/p1_b.yaml` has the values of `configs/p1_a.yaml`, and a test checks this.
   `--fold` picks the fold. The run folder gets the values that the run used, with the fold.
+
+## D25. R0 design (decided by the owner in chat, 2026-11-10)
+
+The owner chose each point from a multiple-choice question in the chat, and then accepted a
+final recap (D16). The AI wrote the options and typed this record.
+
+- Signal: head yaw and pitch from the MediaPipe face landmarker, on the original video of
+  640 x 480. The rule uses one frame per second, the same frame as the score of P1.
+- Normal position: the median yaw and pitch of the same subject, from the start of the video
+  to the current second.
+- Score: the angle distance from the normal position, divided by 30 degrees, and cut at 1.
+  The 30 is an AI choice. It only scales the score, and it was not tuned on any subject.
+- No face in a second: the score of the last second with a face. Before the first face, the
+  score is 0.
+- No training. The alarm threshold comes from validation subjects at milestone 6.
+- R0 gives one suspicion score, not 4 classes. The comparison with P1 uses the ROC-AUC and
+  the event metrics.
+- Reasons, from the options that the owner chose:
+  - Own median: the normal head position differs between people. The rule looks only at the
+    past, so it works live, and it uses no labels. The cost: the rule needs some time at the
+    start. If a subject looks away for more than half of the time, the normal position
+    moves.
+  - Last score for a second with no face: a high score stays if the face is lost in a turn,
+    and a low score stays if it is lost in the normal position. The cost: the score can
+    stay at an old value for a long time.
+- Options that the owner did not choose: a fixed normal position that faces the camera. A
+  score of 1 or of 0 for a second with no face.
+- Model file: `face_landmarker.task` from the MediaPipe model storage of Google, 3758596
+  bytes, SHA-256 `64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff`. It is in
+  `data/models/`, which is not committed. The code checks the hash.
+- Dependency: mediapipe 1.2.2 on the laptop, as the optional extra `landmarks`. Colab does
+  not install it. It also installed opencv-contrib-python 5.0.0.93 next to opencv-python.
+- Note for the report: the first look at the angles used 2 training actors of protocol A
+  (subjects 1 and 3). In protocol B, each subject is a test subject one time. The values
+  from that look were used to write the options, not to tune a number.
+- The head pose per second goes to `data/processed/pose/`. It is not committed.
+
+## D26. Finding: R0 sees head turns, but not talk (2026-11-10)
+
+This entry is a result, not a choice. All numbers come from `results/r0/`.
+
+- ROC-AUC for cheat against no cheat, per second (`roc_auc_by_split.csv`):
+
+  | Split part | Seconds | R0 | P1 (D23) |
+  |---|---|---|---|
+  | Protocol A, validation (3 actors) | 2733 | 0.837 | 0.501 |
+  | Protocol A, test (9 real, 1 actor) | 11742 | 0.532 | 0.631 |
+  | Protocol B, test of fold 1 | 5236 | 0.710 | 0.642 |
+  | Protocol B, test of fold 2 | 6257 | 0.619 | 0.656 |
+  | Protocol B, test of fold 3 | 6042 | 0.666 | 0.622 |
+  | Protocol B, test of fold 4 | 6148 | 0.605 | 0.855 |
+
+- All 24 subjects together: 0.628 (`summary.json`).
+- Per subject (`per_subject.csv`): the ROC-AUC of the 15 actors goes from 0.594 to 0.904. The
+  ROC-AUC of the 9 real exam takers goes from 0.493 to 0.664, which is near chance level.
+- Per type code (`per_code.csv`): the suspicion is above 0.5 for 33.0% of the seconds of
+  code 1 and 24.1% of code 6. It is above 0.5 for 10.2% of code 2, 7.3% of code 5, and 8.5%
+  of the seconds with no cheat.
+- Reading: the rule sees a head turn (codes 1 and 6). Talk (code 2) and a phone call (code
+  5) need no head turn, so the rule does not see them. The real exam takers mostly talk
+  (`results/eda/summary.md`). Thus R0 is weak on them.
+- Face detection: MediaPipe finds a face in 87.5% of the seconds on average. The lowest
+  subject has 60.1%.
+- Comparison with P1 on protocol A: R0 is better on the validation actors, and P1 is better
+  on the test set. Neither model is good on the real exam takers.
+- Limits: these are scores per second. The event metrics and the alarm threshold come at
+  milestone 6. The P1 values for protocol B come from the runs of D27.
+
+## D27. Finding: P1 on protocol B (2026-11-11)
+
+This entry is a result, not a choice. All numbers come from `results/p1_b_summary.csv`,
+`results/p1_b_test_per_subject.csv`, and the 4 run folders `results/p1_b_f*`. The runs used
+the code at `7fd330e` on a GPU NVIDIA L4, with the values of D21.
+
+- Scores of the 4 folds:
+
+  | Fold | Epochs (best) | Minutes | Test macro F1 | Baseline macro F1 | Test accuracy | Baseline accuracy | Test ROC-AUC | Validation ROC-AUC |
+  |---|---|---|---|---|---|---|---|---|
+  | 1 | 13 (3) | 35.0 | 0.294 | 0.228 | 0.695 | 0.838 | 0.642 | 0.746 |
+  | 2 | 19 (9) | 47.2 | 0.357 | 0.207 | 0.698 | 0.704 | 0.656 | 0.811 |
+  | 3 | 15 (5) | 37.9 | 0.322 | 0.231 | 0.694 | 0.857 | 0.622 | 0.711 |
+  | 4 | 11 (1) | 29.4 | 0.639 | 0.209 | 0.804 | 0.719 | 0.855 | 0.708 |
+  | Mean | | 37.4 | 0.403 | 0.219 | 0.723 | 0.780 | 0.694 | 0.744 |
+  | Std | | | 0.159 | | 0.054 | | 0.108 | 0.048 |
+
+- Macro F1 is above the baseline in each fold. The accuracy is below the baseline in the
+  folds 1, 2, and 3. The result changes much between folds: fold 4 is far above the others.
+- The models overfit as on protocol A (D23). Early stopping kept an early epoch in each run.
+- Per subject (`p1_b_test_per_subject.csv`, each subject is a test subject one time):
+  - Real exam takers: the ROC-AUC of P1 goes from 0.594 to 0.909. P1 is better than R0
+    for 9 of the 9 real exam takers.
+  - Actors: the ROC-AUC of P1 goes from 0.295 to 0.949. P1 is better than R0 for
+    8 of the 15 actors.
+- Reading for research question 5: on protocol A, P1 trained on actors only, and its
+  ROC-AUC on the real exam takers went from 0.367 to 0.871 (D23). On protocol B, the training
+  folds hold real exam takers, and the values for them are higher. A model that learned from
+  actors only does not transfer well to real exam takers.
+- Reading for research question 1: P1 and R0 fail on different subjects. R0 is good for some
+  actors where P1 is near or below chance level, for example the subjects 2 and 7. P1 is
+  better for each real exam taker. No model is better for all subjects.
+- Limits: one seed per fold. These are scores per second. The event metrics come at
+  milestone 6. The models were not scored on their training subjects for protocol B.
+- Tool: `python -m proctor_assist.evaluate --summary p1_b` writes the two summary files.
+
+## D28. Score files per second stay out of the repository (decided by the owner in chat, 2026-11-11)
+
+The owner chose this from one multiple-choice question in the chat (D16).
+
+- Context: a score file (`scores_*.csv`, and `results/r0/scores.csv`) has the column
+  `target`. It holds the class of D14 for each second of each subject. That is a derived
+  form of the OEP labels. D13 and D22 say that label lists stay out of the public
+  repository, because the license is not clear.
+- Error by the AI: commit `9ae381c` added the three score files of the P1 run on protocol A
+  to the public repository, against D13 and D22. The AI found this on 2026-11-11, before
+  the next commit.
+- Decision (owner): score files are not committed. `.gitignore` blocks them. They stay on
+  the laptop in `results/` and on Drive in the run folders. The three committed files leave
+  the repository with `git rm --cached`. The files on the laptop are not deleted.
+- The metrics, the history per epoch, and the tables per subject and per type code stay in
+  the repository.
+- Cost: the metrics cannot be computed again from the repository alone. The three files are
+  still in the git history.
+- Options that the owner did not choose: keep the score files in the repository and correct
+  D13 and D22. Remove the files from the git history with a force push.
+- Follow-up: the question for the lecturer about the license also covers these files.

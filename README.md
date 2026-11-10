@@ -6,7 +6,9 @@ decides. The system never labels a person as a cheater. Goals, scope, and constr
 [docs/PLAN.md](docs/PLAN.md). Design decisions are in [docs/decisions.md](docs/decisions.md).
 
 Results so far: the first P1 run on protocol A is in `results/p1_a_20261110-132143_edfc724/`.
-Its reading is in `docs/decisions.md` (D23). All other results are TBD.
+Its reading is in `docs/decisions.md` (D23). The R0 results are in `results/r0/` (D26). The 4 runs
+of P1 on protocol B are in `results/p1_b_f*`, with `results/p1_b_summary.csv` (D27). All other
+results are TBD.
 
 ## Repository layout
 
@@ -111,6 +113,13 @@ Drive for Desktop then uploads the files.
 
 ```bash
 .venv/Scripts/python -m proctor_assist.pack pack "G:/My Drive/proctor-assist"
+```
+
+R0 is a rule with no training (`docs/decisions.md` D25). It runs on the laptop and needs the
+optional extra `landmarks`: `pip install -e ".[dev,landmarks]"`.
+
+```bash
+.venv/Scripts/python -m proctor_assist.r0
 ```
 
 To train a model, give its config file to the training script. The run folder gets the
