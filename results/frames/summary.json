@@ -1,0 +1,19 @@
+{
+  "fps": 5,
+  "size": [
+    224,
+    224
+  ],
+  "jpeg_quality": 90,
+  "frames_saved": 125706,
+  "seconds": 25132,
+  "gigabytes": 1.449,
+  "subjects_where_header_and_decoded_count_differ": 0,
+  "run": {
+    "time_utc": "2026-11-10T08:35:55+00:00",
+    "git_sha": "1963033",
+    "git_dirty": true,
+    "python": "3.13.14 (tags/v3.13.14:fd17997, Jun 10 2026, 13:03:48) [MSC v.1944 64 bit (AMD64)]",
+    "opencv": "5.0.0"
+  }
+}
