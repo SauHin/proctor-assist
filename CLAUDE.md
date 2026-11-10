@@ -51,10 +51,11 @@ This project is graded, and fabricated evidence is an academic integrity violati
   labels, or any tester or user responses. You may propose drafts, but mark them clearly as
   `PROPOSAL` in a separate file; the owner decides and writes the final version.
 - Never generate fake or synthetic data and present it as real.
-- When you help with something substantial, remind the owner to add an entry to
-  `docs/ai_usage_log.md`. When asked to draft an entry, follow the rules section in that
-  file exactly: never fill in verification, test results, dates, or entry numbers you
-  do not know; ask the owner instead.
+- After substantial help, add a short entry to `docs/ai_usage_log.md` yourself, and follow
+  the rules section in that file. Do not ask the owner for missing details. For an unknown
+  entry number, write `TBD`. In Student Verification, write `PENDING: <plan>`. Never fill
+  in verification, test results, or dates that you do not know. The owner reviews all
+  entries at the end.
 
 ## Privacy rules
 
