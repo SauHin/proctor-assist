@@ -47,7 +47,7 @@ Out of scope (decided, do not reintroduce without discussion):
 
 1. Does a deep learning model detect cheating better than a simple head-turn rule without
    training? (R0 vs P1)
-2. With a small dataset, how much does pretraining matter? (B1 vs P1)
+2. With a small dataset, how much does pretraining matter? (P1s vs P1, and B1 vs P1)
 3. Does temporal context over a window of a few seconds help, compared to one frame at a
    time? (P1 vs E1, E3)
 4. Pixels or landmarks: what is the trade-off between detection quality and CPU cost?
@@ -100,6 +100,7 @@ Non-negotiable data rules:
 | R0 | Head-turn rule on face landmarks (MediaPipe), no training | (none) | Reference without training |
 | B1 | Small CNN per frame, trained from scratch | (none) | Deep learning baseline |
 | P1 | MobileNetV2 (ImageNet) per frame, with the configuration of the reference paper | Initial weights: random → ImageNet | Proven method and app fallback |
+| P1s | The MobileNetV2 of P1, trained from random initial weights (added by D29) | Initial weights: ImageNet → random | Isolates the effect of pretraining |
 | E1 | MobileNetV2 frame features → GRU over a window of 2–4 s | One frame → a window | New: temporal context |
 | E2 | Face, hand, and body landmarks (MediaPipe) → small GRU | Input: pixels → landmarks | New: CPU cost and scalability |
 | E3 (optional) | Video model pretrained on Kinetics (for example X3D-S), fine-tuned | Pretraining: images → video | New, only if time and GPU allow |

@@ -698,3 +698,35 @@ The owner chose this from one multiple-choice question in the chat (D16).
 - Options that the owner did not choose: keep the score files in the repository and correct
   D13 and D22. Remove the files from the git history with a force push.
 - Follow-up: the question for the lecturer about the license also covers these files.
+
+## D29. Milestone 5, round 1: P1s and the features of E1 (decided by the owner in chat, 2026-11-11)
+
+The owner chose each point from a multiple-choice question in the chat, and then accepted a
+final recap (D16). The AI wrote the options and typed this record.
+
+- New configuration P1s: the same MobileNetV2 as P1, with random initial weights, on
+  protocols A and B. PLAN §5 gets one more row.
+- E1 features: the backbone of the P1 run of the same split, frozen. Only the GRU is trained.
+- Consequence: E1 has no augmentation, because the features are computed one time.
+- Reasons, from the options that the owner chose:
+  - P1s: B1 and P1 differ in the architecture and in the initial weights. P1s and P1 differ
+    in the initial weights only. Thus P1s gives a clean answer to research question 2. The
+    cost: about 3 to 4 hours of GPU time, estimated from the 173 minutes of the 5 P1 runs.
+  - E1 on the P1 backbone: the only difference from P1 is one frame against one window, as
+    in PLAN §5. The GRU trains in a short time. The cost: P1 learned the training subjects
+    (D23). Its features are then too good on those subjects, and the GRU can fail on new
+    people in the same way.
+- Options that the owner did not choose: P1s on protocol B only, or no P1s. For E1, the
+  ImageNet backbone with no fine-tuning, or a CNN and a GRU that train together.
+- AI choices, easy to change (D10):
+  - B1: 4 blocks of convolution (32, 64, 128, and 256 filters), batch normalization, ReLU,
+    and max pooling. Then global average pooling and the output layer.
+  - E1: the feature of a frame is the output of the last hidden dense layer of P1, with 128
+    values. One GRU layer with 64 units, then the output layer.
+  - B1, P1s, and E1 use the sampling, the epochs, the early stopping, and the optimizer
+    values of P1 (D21). The config files of B1 and P1s come from the P1 files, and a test
+    checks that they differ only in their variable.
+- Code: `models.build` creates the model that a config names. Each model gets only the
+  config values that it knows.
+- Open for round 2: the design of E2 (landmarks), after a measurement of the MediaPipe speed
+  for hands and body.

@@ -13,6 +13,7 @@ Single experiment track (PLAN §5):
 - B1: small CNN per frame, trained from scratch (DL baseline).
 - P1: MobileNetV2 per frame, set up as in the reference paper (proven method and app
   fallback).
+- P1s: P1 with random initial weights (ablation for pretraining, D29).
 - E1: frame features + GRU over a window.
 - E2: landmarks + GRU.
 - E3: pretrained video model (optional).
