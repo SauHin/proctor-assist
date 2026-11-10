@@ -1,0 +1,70 @@
+import numpy as np
+import pandas as pd
+import pytest
+import torch
+from torch import nn
+
+from proctor_assist import data, metrics, models, train
+
+
+def test_p1_head_has_the_sizes_of_the_paper():
+    model = models.P1(pretrained=False)
+    x = torch.zeros(2, 3, 224, 224)
+    assert model.head[:4](model.features(x)).shape == (2, 400)  # convolution, ReLU, pooling, flatten
+    assert sum(isinstance(layer, nn.Linear) for layer in model.head) == 6  # 5 dense layers and the output
+    assert model(x).shape == (2, 4)
+
+
+def test_expand_gives_all_frames_for_training_and_the_last_frame_for_a_score():
+    windows = pd.DataFrame({"subject": [1, 1], "t": [0, 3], "target": [0, 2]})
+    train_rows = data.expand(windows, train=True)
+    assert train_rows.frame.tolist() == [0, 1, 2, 3, 4, 15, 16, 17, 18, 19]
+    assert train_rows.target.tolist() == [0] * 5 + [2] * 5
+    assert data.expand(windows, train=False).frame.tolist() == [4, 19]
+
+
+def test_report_and_suspicion_on_known_values():
+    probs = np.array([[0.9, 0.1, 0, 0], [0.2, 0.7, 0.1, 0], [0.6, 0.1, 0.3, 0], [0.1, 0, 0, 0.9]])
+    r = metrics.report(np.array([0, 1, 2, 3]), probs)
+    assert metrics.suspicion(probs).tolist() == pytest.approx([0.1, 0.8, 0.4, 0.9])
+    assert r["accuracy"] == 0.75  # the row of class 2 is predicted as class 0
+    assert r["confusion_matrix_rows_true_cols_pred"][2] == [1, 0, 0, 0]
+    assert r["macro_f1"] == pytest.approx((2 / 3 + 1 + 0 + 1) / 4)
+    assert r["roc_auc_cheat"] == 1.0  # each cheating row has a higher suspicion than the no-cheat row
+    assert r["baseline_accuracy"] == 0.25
+
+
+class Tiny(nn.Module):
+    def __init__(self, dense_layers, units, pretrained):
+        super().__init__()
+        self.net = nn.Sequential(nn.Flatten(), nn.Linear(3 * 8 * 8, 4))
+
+    def forward(self, x):
+        return self.net(x)
+
+
+def test_run_writes_the_run_files_resumes_and_stops_early(tmp_path, monkeypatch):
+    # A tiny model and made-up 8 x 8 frames, so that the loop runs in a moment without data.
+    table = pd.DataFrame({"subject": 1, "t": range(40), "target": [0, 1, 2, 3] * 10, "frame": range(40)})
+    monkeypatch.setitem(train.MODELS, "tiny", Tiny)
+    monkeypatch.setattr(train, "frame_table", lambda subjects, train: table)
+    monkeypatch.setattr(data, "read_frame", lambda s, k: torch.full((3, 8, 8), k % 4 * 60, dtype=torch.uint8))
+    cfg = {"model": "tiny", "protocol": "a", "seed": 0, "epochs": 3, "patience": 10, "batch_size": 8, "lr": 0.01,
+           "dense_layers": 1, "units": 4, "pretrained": False, "balanced_sampling": True, "augment": None, "workers": 0}
+
+    first = tmp_path / "first"
+    first.mkdir()
+    m = train.run(cfg, first)
+    assert m["epochs_run"] == 3 and m["test"]["rows"] == 40
+    for name in ("history.csv", "last.pt", "best.pt", "metrics.json", "scores_val.csv", "scores_test.csv"):
+        assert (first / name).exists()
+    history = pd.read_csv(first / "history.csv")
+    assert history.epoch.tolist() == [1, 2, 3] and history.train_loss.iloc[-1] < history.train_loss.iloc[0]
+
+    train.run(cfg | {"epochs": 5}, first)  # the same folder: the run continues at epoch 4
+    assert pd.read_csv(first / "history.csv").epoch.tolist() == [1, 2, 3, 4, 5]
+
+    second = tmp_path / "second"
+    second.mkdir()
+    stopped = train.run(cfg | {"epochs": 10, "patience": 1, "lr": 0.0}, second)  # no learning, so no better epoch
+    assert stopped["epochs_run"] == 2 and stopped["best_epoch"] == 1

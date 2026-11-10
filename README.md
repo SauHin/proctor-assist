@@ -112,6 +112,14 @@ Drive for Desktop then uploads the files.
 .venv/Scripts/python -m proctor_assist.pack pack "G:/My Drive/proctor-assist"
 ```
 
+To train a model, give its config file to the training script. The run folder gets the
+config, the history per epoch, the checkpoints, and the metrics (`docs/decisions.md` D22).
+Add `--smoke` for a short check of the pipeline on CPU.
+
+```bash
+python -m proctor_assist.train configs/p1_a.yaml
+```
+
 1. Open `notebooks/colab.ipynb` in Colab from the GitHub repository.
 2. Select a GPU runtime.
 3. Run the cells in order. The cell with `pack unpack` checks the zip files against
