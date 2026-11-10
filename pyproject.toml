@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "proctor-assist"
+version = "0.1.0"
+description = "Cheating detection for online exam proctors (COMP6826001 final project)"
+requires-python = ">=3.10"
+# Add a dependency when a milestone needs it. Do not pin packages that Colab
+# preinstalls (torch, numpy, ...). env.json records exact versions per run.
+dependencies = ["pandas", "matplotlib", "kaggle"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

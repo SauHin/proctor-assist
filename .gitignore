@@ -1,0 +1,20 @@
+docs/reference/
+
+# Data, checkpoints, and run outputs live on Google Drive, never in this public repo.
+data/
+runs/
+logs/
+models/
+*.pt
+*.ckpt
+*.safetensors
+
+# Python
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Playwright MCP snapshots and logs
+.playwright-mcp/
