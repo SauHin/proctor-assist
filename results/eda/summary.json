@@ -1,0 +1,51 @@
+{
+  "rows": 565,
+  "valid_rows": 564,
+  "invalid_rows": 1,
+  "codes": [
+    1,
+    2,
+    3,
+    5,
+    6
+  ],
+  "exact_duplicate_rows": 3,
+  "rows_that_start_before_the_row_above": 27,
+  "interval_seconds_end_minus_start": 7181,
+  "interval_seconds_end_second_included": 7745,
+  "cheat_seconds_without_double_count": 6723,
+  "video_seconds": 25139.04,
+  "cheat_share_pct": 26.743264659271,
+  "mean_video_minutes": 17.457666666666668,
+  "overlapping_pairs": 87,
+  "overlapping_pairs_of_different_codes": 74,
+  "subjects_with_last_end_in_video": 24,
+  "subjects_with_last_end_in_video_if_plain_seconds": 0,
+  "paper": {
+    "instances": 569,
+    "cheat_seconds": 7235,
+    "share_instances_pct": [
+      34,
+      50,
+      10,
+      3,
+      4
+    ],
+    "share_seconds_pct": [
+      16,
+      50,
+      21,
+      1,
+      12
+    ]
+  },
+  "run": {
+    "time_utc": "2026-11-10T05:33:41+00:00",
+    "git_sha": "82da337",
+    "git_dirty": true,
+    "python": "3.13.14 (tags/v3.13.14:fd17997, Jun 10 2026, 13:03:48) [MSC v.1944 64 bit (AMD64)]",
+    "opencv": "5.0.0",
+    "pandas": "3.0.6",
+    "matplotlib": "3.11.2"
+  }
+}
