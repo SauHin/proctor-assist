@@ -13,6 +13,10 @@ REPO = Path(__file__).resolve().parents[2]
 # (both gitignored). Set PROCTOR_ROOT to use another folder, e.g. a Drive for Desktop folder.
 _COLAB = Path("/content/drive/MyDrive/proctor-assist")
 ROOT = Path(os.environ.get("PROCTOR_ROOT") or (_COLAB if _COLAB.parent.exists() else REPO))
+# Folder for data that a job reads many times, such as the frames. In Colab, the Drive folder is
+# slow for many small files, so this is the local disk of the runtime. A runtime reset empties it,
+# and `python -m proctor_assist.pack unpack` fills it again (D20).
+FAST_DATA = Path("/content/proctor-data") if ROOT == _COLAB else ROOT / "data"
 
 
 def _run(cmd):

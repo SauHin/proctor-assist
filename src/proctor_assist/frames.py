@@ -1,6 +1,6 @@
 """Extract frames from the webcam videos (D18). Run: python -m proctor_assist.frames
 
-Writes ROOT/data/processed/frames/subjectN/<k>.jpg. Frame k is at k / 5 seconds of the video.
+Writes data/processed/frames/subjectN/<k>.jpg. Frame k is at k / 5 seconds of the video.
 Writes the frame counts and sizes to results/frames/. The subject splits must exist first.
 """
 import json
@@ -8,7 +8,7 @@ import json
 import cv2
 import pandas as pd
 
-from proctor_assist.env import REPO, ROOT, env_info
+from proctor_assist.env import FAST_DATA, REPO, env_info
 from proctor_assist.labels import OEP, SUBJECTS
 from proctor_assist.splits import load_splits
 
@@ -17,7 +17,7 @@ STEP = 5  # keep every 5th frame (D18)
 FPS = VIDEO_FPS // STEP  # frame rate of the stored frames
 SIZE = (224, 224)  # the whole image, no crop (D18)
 QUALITY = 90  # JPEG quality
-OUT = ROOT / "data" / "processed" / "frames"
+OUT = FAST_DATA / "processed" / "frames"
 RESULTS = REPO / "results" / "frames"
 
 

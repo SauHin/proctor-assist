@@ -104,6 +104,15 @@ On Linux or macOS, use `.venv/bin/python` instead of `.venv/Scripts/python`.
 
 ## Run GPU jobs in Colab
 
+The frames go to Colab as one zip file per subject, through Google Drive
+(`docs/decisions.md` D20). Do this step one time on the laptop, after the frame extraction.
+Drive for Desktop then uploads the files.
+
+```bash
+.venv/Scripts/python -m proctor_assist.pack pack "G:/My Drive/proctor-assist"
+```
+
 1. Open `notebooks/colab.ipynb` in Colab from the GitHub repository.
 2. Select a GPU runtime.
-3. Run the cells in order.
+3. Run the cells in order. The cell with `pack unpack` checks the zip files against
+   `manifests/frames_zip.sha256` and opens them on the local disk of the runtime.
