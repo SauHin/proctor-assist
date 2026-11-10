@@ -46,7 +46,7 @@ class Tiny(nn.Module):
 def test_run_writes_the_run_files_resumes_and_stops_early(tmp_path, monkeypatch):
     # A tiny model and made-up 8 x 8 frames, so that the loop runs in a moment without data.
     table = pd.DataFrame({"subject": 1, "t": range(40), "target": [0, 1, 2, 3] * 10, "frame": range(40)})
-    monkeypatch.setitem(train.MODELS, "tiny", Tiny)
+    monkeypatch.setitem(models.MODELS, "tiny", Tiny)
     monkeypatch.setattr(train, "frame_table", lambda subjects, train: table)
     monkeypatch.setattr(data, "read_frame", lambda s, k: torch.full((3, 8, 8), k % 4 * 60, dtype=torch.uint8))
     cfg = {"model": "tiny", "protocol": "a", "seed": 0, "epochs": 3, "patience": 10, "batch_size": 8, "lr": 0.01,
@@ -122,3 +122,25 @@ def test_summary_gives_one_row_per_run_and_the_mean_and_standard_deviation(tmp_p
     assert table.train_minutes["mean"] == 2
     per = pd.read_csv(tmp_path / "m_f_test_per_subject.csv")
     assert per.subject.tolist() == [11, 12] and per.r0_roc_auc_cheat.tolist() == [0.7, 0.8]
+
+
+def test_b1_is_small_and_build_gives_each_model_only_its_own_config_values():
+    cfg = {"model": "b1", "name": "x", "lr": 0.1, "pretrained": True}  # B1 has no pretrained weights
+    model = models.build(cfg)
+    assert isinstance(model, models.B1) and model(torch.zeros(2, 3, 224, 224)).shape == (2, 4)
+    assert sum(p.numel() for p in model.parameters()) < 500_000
+    p1 = models.build({"model": "p1", "dense_layers": 2, "units": 8, "pretrained": True}, pretrained=False)
+    assert sum(isinstance(layer, nn.Linear) for layer in p1.head) == 3
+
+
+def test_the_other_per_frame_configs_differ_from_p1_only_in_their_variable():
+    import yaml
+
+    from proctor_assist.env import REPO
+
+    load = lambda name: yaml.safe_load((REPO / "configs" / f"{name}.yaml").read_text())
+    for protocol in ("a", "b"):
+        p1, p1s, b1 = load(f"p1_{protocol}"), load(f"p1s_{protocol}"), load(f"b1_{protocol}")
+        assert {k for k in p1 if p1[k] != p1s[k]} == {"name", "pretrained"} and p1s["pretrained"] is False
+        assert {k for k in p1 if p1[k] != b1.get(k)} == {"name", "model", "dense_layers", "units", "pretrained"}
+        assert b1["model"] == "b1" and set(b1) <= set(p1)

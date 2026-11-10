@@ -1,4 +1,6 @@
 """Models. Every model returns class scores (logits) for the 4 classes of D14."""
+import inspect
+
 from torch import nn
 from torchvision.models import MobileNet_V2_Weights, mobilenet_v2
 
@@ -25,4 +27,30 @@ class P1(nn.Module):
         return self.head(self.features(x))
 
 
-MODELS = {"p1": P1}
+class B1(nn.Module):
+    """Small CNN per frame, trained from scratch (D29).
+
+    4 blocks of convolution, batch normalization, ReLU, and max pooling (224 x 224 to 14 x 14),
+    then global average pooling and the output layer.
+    """
+
+    def __init__(self, n_classes=4):
+        super().__init__()
+        layers, size = [], 3
+        for filters in (32, 64, 128, 256):
+            layers += [nn.Conv2d(size, filters, 3, padding=1), nn.BatchNorm2d(filters), nn.ReLU(), nn.MaxPool2d(2)]
+            size = filters
+        self.net = nn.Sequential(*layers, nn.AdaptiveAvgPool2d(1), nn.Flatten(), nn.Linear(size, n_classes))
+
+    def forward(self, x):
+        return self.net(x)
+
+
+MODELS = {"p1": P1, "b1": B1}
+
+
+def build(cfg, **override):
+    """Create the model that a config names. Each model gets only the config values that it knows."""
+    model = MODELS[cfg["model"]]
+    known = inspect.signature(model.__init__).parameters
+    return model(**{k: v for k, v in (cfg | override).items() if k in known})

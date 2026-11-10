@@ -22,7 +22,7 @@ from proctor_assist.data import FrameDataset, frame_table, transform
 from proctor_assist.env import REPO
 from proctor_assist.labels import REAL, clean_labels, load_labels
 from proctor_assist.metrics import report
-from proctor_assist.models import MODELS
+from proctor_assist.models import build
 from proctor_assist.train import predict, split_of
 
 
@@ -67,7 +67,7 @@ def per_code(scores, labels):
 def score_train(folder, checkpoint):
     cfg = yaml.safe_load((folder / "config.yaml").read_text())
     table = frame_table(split_of(cfg)["train"], train=False)
-    model = MODELS[cfg["model"]](dense_layers=cfg["dense_layers"], units=cfg["units"], pretrained=False)
+    model = build(cfg, pretrained=False)  # the checkpoint gives the weights
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.load_state_dict(torch.load(checkpoint, map_location=device))
     _, probs, targets = predict(model.to(device), DataLoader(FrameDataset(table, transform()), 128), device)

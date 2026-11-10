@@ -1,0 +1,19 @@
+# B1: small CNN per frame, trained from scratch, protocol A (docs/decisions.md D29).
+name: b1_a
+model: b1            # small CNN, trained from scratch (D29)
+protocol: a          # train on actors, test on the real exam takers and one actor (D15)
+seed: 0
+
+# From the reference paper (Educ. Sci. 2023, section 3.4 and Table 1).
+epochs: 20           # maximum number of epochs
+patience: 10         # early stopping
+batch_size: 16       # best value in Table 2 of the paper
+lr: 0.0001           # Adam
+
+# The same choices as for P1 (D21).
+balanced_sampling: true   # each class has the same chance in a batch (owner decision)
+augment:             # types of the paper, realistic sizes (owner decision)
+  degrees: 15        # rotation up to 15 degrees
+  translate: 0.1     # shift up to 10% of the image
+  scale: 0.1         # zoom from 0.9 to 1.1
+  hflip: true        # horizontal flip, no vertical flip

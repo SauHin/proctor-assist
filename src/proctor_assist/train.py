@@ -26,7 +26,7 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 from proctor_assist.data import FrameDataset, frame_table, transform
 from proctor_assist.env import new_run_dir
 from proctor_assist.metrics import report
-from proctor_assist.models import MODELS
+from proctor_assist.models import build
 from proctor_assist.splits import load_splits
 
 
@@ -73,8 +73,7 @@ def run(cfg, run_dir, smoke=False):
         train_data, cfg["batch_size"], sampler=sampler, shuffle=sampler is None, num_workers=workers, drop_last=True
     )
 
-    model = MODELS[cfg["model"]](dense_layers=cfg["dense_layers"], units=cfg["units"], pretrained=cfg["pretrained"])
-    model.to(device)
+    model = build(cfg).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg["lr"])
     state = {"epoch": 0, "best_val_loss": float("inf"), "best_epoch": 0, "train_seconds": 0.0, "history": []}
     last = run_dir / "last.pt"

@@ -1,0 +1,24 @@
+# P1s: the MobileNetV2 of P1 with random initial weights, protocol B (docs/decisions.md D29).
+# All values equal configs/p1s_a.yaml. Only the name and the protocol differ. A test checks this.
+# Give the fold on the command line: --fold 1 to --fold 4.
+name: p1s_b
+model: p1
+protocol: b          # cross-validation folds, with actors and real exam takers in each fold (D15)
+seed: 0
+
+# From the reference paper (Educ. Sci. 2023, section 3.4 and Table 1).
+epochs: 20           # maximum number of epochs
+patience: 10         # early stopping
+batch_size: 16       # best value in Table 2 of the paper
+lr: 0.0001           # Adam
+dense_layers: 5      # best value in Table 2 of the paper
+
+# Our choices where the paper gives no value (D21).
+units: 128           # units per dense layer
+pretrained: false    # random initial weights. This is the only difference from P1 (D29).
+balanced_sampling: true   # each class has the same chance in a batch (owner decision)
+augment:             # types of the paper, realistic sizes (owner decision)
+  degrees: 15        # rotation up to 15 degrees
+  translate: 0.1     # shift up to 10% of the image
+  scale: 0.1         # zoom from 0.9 to 1.1
+  hflip: true        # horizontal flip, no vertical flip
