@@ -21,3 +21,6 @@ __pycache__/
 
 # Playwright MCP snapshots and logs
 .playwright-mcp/
+
+# Scores per second hold the class of each second, a derived form of the OEP labels (D28).
+results/**/scores*.csv
