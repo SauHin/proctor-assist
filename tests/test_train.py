@@ -97,3 +97,28 @@ def test_the_protocol_b_config_equals_the_protocol_a_config_and_picks_its_fold()
     assert {k for k in a if a[k] != b[k]} == {"name", "protocol"}
     assert train.split_of(b | {"fold": 2}) == splits.load_splits()["protocol_b"][1]
     assert train.split_of(a) == splits.load_splits()["protocol_a"]
+
+
+def test_summary_gives_one_row_per_run_and_the_mean_and_standard_deviation(tmp_path):
+    import json
+
+    from proctor_assist import evaluate
+
+    part = {"macro_f1": 0.0, "baseline_macro_f1": 0.2, "accuracy": 0.5, "baseline_accuracy": 0.7, "roc_auc_cheat": 0.6}
+    for k, f1 in ((1, 0.3), (2, 0.5)):
+        folder = tmp_path / f"m_f{k}_x"
+        folder.mkdir()
+        metrics = {"epochs_run": 4, "best_epoch": 2, "train_seconds": 120, "val": part, "test": part | {"macro_f1": f1}}
+        (folder / "metrics.json").write_text(json.dumps(metrics))
+        rows = pd.DataFrame({"part": ["val", "test"], "subject": [k, k + 10], "roc_auc_cheat": [0.5, 0.9]})
+        rows.to_csv(folder / "per_subject.csv", index=False)
+    (tmp_path / "r0").mkdir()
+    pd.DataFrame({"subject": [11, 12], "roc_auc_cheat": [0.7, 0.8]}).to_csv(tmp_path / "r0" / "per_subject.csv", index=False)
+
+    evaluate.summary("m_f", results=tmp_path)
+    table = pd.read_csv(tmp_path / "m_f_summary.csv").set_index("run")
+    assert table.index.tolist() == ["m_f1_x", "m_f2_x", "mean", "std"]
+    assert table.test_macro_f1["mean"] == pytest.approx(0.4) and table.test_macro_f1["std"] == pytest.approx(0.1414, abs=1e-4)
+    assert table.train_minutes["mean"] == 2
+    per = pd.read_csv(tmp_path / "m_f_test_per_subject.csv")
+    assert per.subject.tolist() == [11, 12] and per.r0_roc_auc_cheat.tolist() == [0.7, 0.8]

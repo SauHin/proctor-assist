@@ -1,6 +1,7 @@
 """Look closer at the scores of one run: per subject, and per OEP type code.
 
 Run: python -m proctor_assist.evaluate results/<run> [--checkpoint <best.pt>]
+     python -m proctor_assist.evaluate --summary p1_b      (all runs with this prefix, after the line above)
 
 Writes per_subject.csv and per_code.csv into the folder, from its scores_*.csv files. With
 --checkpoint, the script first scores the training subjects with the same steps as validation
@@ -18,6 +19,7 @@ from sklearn.metrics import roc_auc_score
 from torch.utils.data import DataLoader
 
 from proctor_assist.data import FrameDataset, frame_table, transform
+from proctor_assist.env import REPO
 from proctor_assist.labels import REAL, clean_labels, load_labels
 from proctor_assist.metrics import report
 from proctor_assist.models import MODELS
@@ -75,11 +77,45 @@ def score_train(folder, checkpoint):
     (folder / "metrics_train.json").write_text(json.dumps(report(targets, probs), indent=2) + "\n")
 
 
+def summary(prefix, results=REPO / "results"):
+    """Write results/<prefix>_summary.csv: one row per run folder, then the mean and the standard deviation.
+
+    Also write results/<prefix>_test_per_subject.csv: the test rows per subject of all runs, with the
+    R0 value for the same seconds next to them.
+    """
+    rows, subjects = [], []
+    for folder in sorted(f for f in results.glob(prefix + "*") if (f / "metrics.json").exists()):
+        m = json.loads((folder / "metrics.json").read_text())
+        row = {"run": folder.name, "epochs_run": m["epochs_run"], "best_epoch": m["best_epoch"]}
+        row["train_minutes"] = m["train_seconds"] / 60
+        for part in ("val", "test"):
+            for key in ("macro_f1", "baseline_macro_f1", "accuracy", "baseline_accuracy", "roc_auc_cheat"):
+                row[f"{part}_{key}"] = m[part][key]
+        rows.append(row)
+        per = pd.read_csv(folder / "per_subject.csv")
+        subjects.append(per[per.part == "test"].assign(run=folder.name))
+    table = pd.DataFrame(rows)
+    numbers = table.drop(columns="run")
+    stats = [numbers.mean().to_frame().T.assign(run="mean"), numbers.std().to_frame().T.assign(run="std")]
+    pd.concat([table, *stats], ignore_index=True).to_csv(
+        results / f"{prefix}_summary.csv", index=False, float_format="%.4f", lineterminator="\n"
+    )
+    r0 = pd.read_csv(results / "r0" / "per_subject.csv").set_index("subject").roc_auc_cheat
+    per = pd.concat(subjects, ignore_index=True).drop(columns="part").sort_values("subject")
+    per.assign(r0_roc_auc_cheat=per.subject.map(r0)).to_csv(
+        results / f"{prefix}_test_per_subject.csv", index=False, float_format="%.4f", lineterminator="\n"
+    )
+    print(f"Wrote {prefix}_summary.csv and {prefix}_test_per_subject.csv for {len(rows)} runs")
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("folder")
+    parser.add_argument("folder", nargs="?")
     parser.add_argument("--checkpoint")
+    parser.add_argument("--summary", help="prefix of the run folders in results/, for example p1_b")
     args = parser.parse_args()
+    if args.summary:
+        return summary(args.summary)
     folder = Path(args.folder)
     if args.checkpoint:
         score_train(folder, args.checkpoint)
