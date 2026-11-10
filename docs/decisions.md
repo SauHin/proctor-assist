@@ -405,3 +405,27 @@ These are AI choices inside D18. They are easy to change.
 - Rejected: frames as arrays without compression. One 224 x 224 frame with 3 channels is
   about 150 KB, and the JPEG files are about 12 KB per frame. Rejected: decode from the video
   during training. Each window then needs a seek in the video and a decode.
+
+## D20. Frames go to Colab as zip files through Drive for Desktop (decided by the owner in chat, 2026-11-10)
+
+The owner chose this from one multiple-choice question in the chat (D16). It closes the open
+point of D8.
+
+- Decision (owner): `python -m proctor_assist.pack pack` writes one zip file per subject into
+  the Google Drive folder of the project. Drive for Desktop uploads the files. In Colab,
+  `pack unpack` opens them on the local disk of the runtime.
+- Check: `manifests/frames_zip.sha256` is committed. If a zip file differs from the manifest,
+  `unpack` stops. Thus Colab trains on the same bytes that the laptop extracted.
+- Reasons, from the option that the owner chose: the data is the same on both machines,
+  there is no manual upload, and the training reads from a fast local disk. The cost: one
+  upload of 1.449 GB, and the same amount of Google Drive storage.
+- Options that the owner did not choose: Colab extracts the frames from the Kaggle files
+  itself. All data lives in the Drive folder through `PROCTOR_ROOT`.
+- AI choices inside this decision:
+  - `env.FAST_DATA` is the folder for the frames. On the laptop, it is `data/`. In Colab, it
+    is `/content/proctor-data` on the local disk. A runtime reset empties it, and `unpack`
+    fills it again.
+  - The zip files have no compression, because JPEG is compressed already.
+  - Each file in a zip has a fixed date. Thus the same frames give the same zip bytes.
+- Colab MCP: the connection test passed on 2026-11-10. The server connected to a notebook
+  and ran a cell.
