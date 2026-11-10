@@ -144,3 +144,78 @@ to this project on 2026-11-10.
 - Rejected: download all files. Rejected: keep the original file names. Rejected: a manifest
   only in the data folder, because then the local copy and the Drive copy have no shared
   reference.
+
+## D12. Finding: meaning of the type codes in `gt.txt` (2026-11-10)
+
+This entry is a finding, not a choice. The class mapping is a separate owner decision. A draft
+is in `docs/class_mapping_PROPOSAL.md`.
+
+- Source: Atoum et al., "Automated Online Exam Proctoring", section IV and Fig. 9. The copy is
+  the authors' version from the MSU lab site, archived by the Wayback Machine on 2023-01-06
+  (`web.archive.org/web/20230106084226/http://cvlab.cse.msu.edu/pdfs/Atoum_Chen_Liu_Hsu_Liu_OEP.pdf`,
+  15 pages). Its page header says "accepted with minor revision, Dec 30, 2015". The final IEEE
+  version is not verified. The snapshot of 2025-01-18 is cut off at 1 MiB and cannot be read.
+- The paper defines 5 types: (1) cheating from a book, notes, or text on paper, (2) talking
+  to a person in the room, (3) using the Internet, (4) asking a friend over the phone,
+  (5) using a phone. The caption of Fig. 9 says "use a phone or other devices" for type 5.
+- The files do not use the numbers 1 to 5. They hold the codes 1, 2, 3, 5, and 6
+  (`results/eda/summary.json`). No source that we found explains code 5, code 6, or the
+  missing code 4. `READ_ME.txt` gives no code list.
+- Reading of the codes, with the evidence for each:
+
+  | Code in `gt.txt` | Meaning | Evidence |
+  |---|---|---|
+  | 1 | Paper type 1: text on paper | Paper, and the share of instances matches Fig. 9 |
+  | 2 | Paper type 2: talk to a person in the room | Paper, and the share matches Fig. 9 |
+  | 3 | Paper type 3: use the Internet | Paper, and the share matches Fig. 9 |
+  | 5 | Paper type 4: ask a friend over the phone | Inferred. Share matches Fig. 9, and sample frames |
+  | 6 | Paper type 5: use a phone | Inferred. Share is near Fig. 9, and sample frames |
+
+- Evidence from the data (`results/eda/summary.md`): the shares of instances for the codes
+  1, 2, 3, 5, 6 are 34.0%, 50.5%, 9.2%, 2.7%, and 3.5%. Fig. 9 gives 34%, 50%, 10%, 3%, and
+  4% for the types 1 to 5. The shares of labeled seconds are 20.1%, 50.8%, 21.3%, 1.5%, and
+  6.3%. Fig. 9 gives 16%, 50%, 21%, 1%, and 12%. The order agrees. The values for code 1 and
+  code 6 differ from the paper.
+- Evidence from frames (AI observation, the owner must verify it): in the contact sheet of
+  code 5 (`data/eda/frames/code5.jpg`), 7 of the 8 frames show a phone at the ear. In the
+  contact sheet of code 6, no frame shows a phone at the ear, and most subjects look down. The
+  webcam does not see the desk, so the phone itself is not visible.
+- Time format: MMSS from the start of the video. With this reading, the last label of all 24
+  subjects is inside the video. If a time were plain seconds, this holds for 0 subjects. The
+  paper says that the labels have a resolution of one second.
+- Differences from the paper that stay open: the files hold 565 rows and the paper reports
+  569 instances. The total length is 7181 s as end - start, or 7745 s with the end second
+  included. The paper reports 7235 s. Intervals cover 26.7% of the video time. The paper says
+  "nearly 20%". The Kaggle mirror can differ from the data that the paper used.
+- The videos agree with the paper: 640 x 480 at 25 fps, with a mean length of 17.5 minutes.
+- The paper's own classifier used other groups: class 1 for text, class 2 for all speech
+  (types 2 and 4), class 3 for phone or laptop. A separate module detected type 3 from the
+  number of open windows. That system had audio and a wearcam. This project has neither.
+- Still to verify (owner): the type list in the final IEEE version (IEEE Xplore through
+  BINUS), and the contact sheets. The dataset author can confirm the codes 5 and 6. His
+  address is in `READ_ME.txt`.
+
+## D13. Label parser and EDA (2026-11-10)
+
+- Parser (`proctor_assist.labels`): it ignores spaces and tabs around a field. A line that
+  breaks the format stays in the output with a reason, and gets no values. The parser never
+  repairs a label. Reason: labels are an owner decision, and a silent repair hides a data
+  problem. The raw files are never edited, because they must match the manifest (D11).
+- EDA (`python -m proctor_assist.eda`): one script writes all tables, `summary.md`, and the
+  figures to `results/eda/`. Documents take their numbers from these files.
+- Committed: counts and totals, and the few rows that have a problem. Not committed
+  (`data/eda/`): the contact sheets, because they show faces, and the full list of overlapping
+  rows, because the license of the labels is unknown.
+- Interval length in the EDA: end - start. It is not known if the annotators meant the end
+  second as part of the interval. `summary.json` has both totals. The convention for the
+  ground truth is an owner decision (see the proposal).
+- Video properties come from the file header through OpenCV. The script also reads the last
+  frame of each video as a check. It does not decode every frame, so the frame count is the
+  count from the header. Milestone 3 decodes the frames. If the counts differ, that step
+  shows it.
+- Dependency: `opencv-python`, approved by the owner on 2026-11-10 and not pinned (D5).
+  Milestone 3 needs it again for frame extraction. `summary.json` records the local version.
+- Figures: one fixed color per type code. A validator checked the colors for color-blind
+  readers. The timeline also gives each code its own lane, so color is not the only cue.
+- Rejected: a reader for the AVI header from the standard library. It needs no dependency,
+  but it cannot give sample frames. Rejected: a repair of bad lines in the parser.

@@ -76,6 +76,9 @@ Out of scope (decided, do not reintroduce without discussion):
   monitor and `<username>2.avi` is the wearcam on the eyeglasses. The project downloads only
   the webcam videos (3.93 GB in total, Kaggle file listing), `gt.txt`, and `READ_ME.txt`
   (D11).
+- **What the label files hold (milestone 2):** 565 rows with the type codes 1, 2, 3, 5, and
+  6, not 1 to 5 as in the paper. D12 gives the meaning of the codes.
+  `results/eda/summary.md` gives the statistics.
 - **Ground truth:** the OEP intervals. The mapping from the 5 OEP types to the project
   classes is an owner decision at milestone 2. Proposal: the 4 classes of the reference
   paper (no cheat, read text, ask a person, call a friend). Intervals of the type "use the
