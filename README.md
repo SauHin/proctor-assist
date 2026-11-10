@@ -52,6 +52,31 @@ never committed.
 .venv/Scripts/python -m proctor_assist.eda
 ```
 
+## Prepare the data for training
+
+Run these steps in order. The subject splits come first, so that no frame is extracted
+before each subject has its split (`docs/decisions.md` D15 and D18).
+
+1. Write the subject splits to `splits/subjects.json`. The file is committed, so this step is
+   necessary only after a change to the split design.
+
+```bash
+.venv/Scripts/python -m proctor_assist.splits
+```
+
+2. Extract the frames at 5 fps and 224 x 224 to `data/processed/frames/`. If the run stops,
+   start it again. It skips the subjects that are complete.
+
+```bash
+.venv/Scripts/python -m proctor_assist.frames
+```
+
+3. Count the windows per class for each split, in `results/windows/summary.csv`.
+
+```bash
+.venv/Scripts/python -m proctor_assist.windows
+```
+
 ## Run locally
 
 1. Create the virtual environment and install the package.
