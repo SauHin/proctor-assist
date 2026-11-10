@@ -13,6 +13,8 @@ dependencies = ["pandas", "matplotlib", "kaggle", "opencv-python", "torch", "tor
 
 [project.optional-dependencies]
 dev = ["pytest"]
+# Only the laptop reads landmarks (R0, E2). Colab does not install this extra (D25).
+landmarks = ["mediapipe"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
