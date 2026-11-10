@@ -515,3 +515,61 @@ These are AI choices inside D21. They are easy to change.
   from `gt.txt`, and the labels do not go into the public repository.
 - `--smoke` runs 2 short epochs on a few rows with no pretrained weights. It only shows
   that the pipeline works. Its numbers are not results.
+
+## D23. Finding: P1 on protocol A does not transfer to new subjects (2026-11-10)
+
+This entry is a result and a diagnosis, not a choice. All numbers come from
+`results/p1_a_20261110-132143_edfc724/`.
+
+- Run: code at `edfc724`, GPU NVIDIA L4, 12 epochs of about 119 s, 1426 s in total. Early
+  stopping kept the model of epoch 2.
+- Training curve (`history.csv`): the training loss falls from 0.305 to 0.087. The validation
+  loss is lowest at epoch 2 (0.923), and then it rises to 1.268. The model overfits from the
+  second epoch.
+- Scores of the kept model (`metrics.json` and `metrics_train.json`):
+
+  | Subjects | Seconds | Macro F1 | Baseline macro F1 | Accuracy | Baseline accuracy | ROC-AUC cheat |
+  |---|---|---|---|---|---|---|
+  | Training (11 actors) | 9208 | 0.767 | 0.227 | 0.892 | 0.832 | 0.978 |
+  | Validation (3 actors) | 2733 | 0.387 | 0.224 | 0.804 | 0.813 | 0.501 |
+  | Test (9 real, 1 actor) | 11742 | 0.423 | 0.210 | 0.693 | 0.726 | 0.631 |
+
+- Diagnosis: the same scoring steps give a ROC-AUC of 0.978 on the training subjects. Thus
+  the low scores are not an error in the scoring code. The model learned the training
+  subjects, and it does not transfer to new people.
+- Sanity check of PLAN §5: the loss decreases, and macro F1 is above the baseline. But the
+  accuracy is below the baseline on validation and on test. The ROC-AUC on validation is at
+  chance level.
+- Per subject (`per_subject.csv`): the ROC-AUC goes from 0.318 to 0.824 on the validation
+  subjects, and from 0.367 to 0.871 on the test subjects. The result depends on the person.
+- Per type code (`per_code.csv`), validation subjects: the suspicion is above 0.5 for 25.6%
+  of the seconds of code 1, 44.9% of code 2, 66.7% of code 5, and 29.5% of code 6. Code 6 is
+  not worse than code 1. Thus the merge of D14 is not the cause.
+- Comparison with the paper: the paper reports 84.52%, from 5-fold cross-validation on
+  frames. There, frames of one subject are in the training part and in the validation part.
+  Our score on the training subjects shows how high a score is when the model knows the
+  person. This is a likely reason for the difference. It is not proven.
+- Limits: this is one run with one seed. The validation set has 3 subjects, so each number
+  on it is unstable.
+- Tool: `python -m proctor_assist.evaluate` writes the tables per subject and per type code,
+  and scores the training subjects from a checkpoint.
+- The next step for P1 is in D24.
+
+## D24. P1 runs with no change on protocol B (decided by the owner in chat, 2026-11-10)
+
+The owner chose this from one multiple-choice question in the chat (D16), after the result
+of D23.
+
+- Decision (owner): P1 runs on the 4 folds of protocol B with the same values as on protocol
+  A (D21).
+- Reasons, from the option that the owner chose: protocol B is the main protocol, so these
+  runs are necessary. Nothing is tuned. The runs show if the failure of D23 is general, or
+  special to protocol A.
+- Options that the owner did not choose:
+  - A test of a frozen backbone on protocol A first. It is cheap, but 3 validation subjects
+    are too few to judge a change.
+  - Accept the result and go on to R0.
+- A later change to P1 is judged on validation subjects only, never on test subjects. The
+  result of D23 stays in the repository and in the report.
+- Code: `configs/p1_b.yaml` has the values of `configs/p1_a.yaml`, and a test checks this.
+  `--fold` picks the fold. The run folder gets the values that the run used, with the fold.

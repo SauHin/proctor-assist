@@ -5,7 +5,8 @@ webcam video of online exam takers and flags moments for a proctor to review. Th
 decides. The system never labels a person as a cheater. Goals, scope, and constraints are in
 [docs/PLAN.md](docs/PLAN.md). Design decisions are in [docs/decisions.md](docs/decisions.md).
 
-Results: TBD. No experiment has run yet.
+Results so far: the first P1 run on protocol A is in `results/p1_a_20261110-132143_edfc724/`.
+Its reading is in `docs/decisions.md` (D23). All other results are TBD.
 
 ## Repository layout
 
