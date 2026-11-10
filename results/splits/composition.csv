@@ -1,0 +1,16 @@
+split,part,subjects,real,code_1,code_2,code_3,code_5,code_6
+A,train,11,0,102,79,39,9,8
+A,val,3,0,16,8,13,4,11
+A,test,10,9,74,198,0,2,1
+B fold 1,train,12,5,90,155,32,6,10
+B fold 1,val,6,2,69,91,7,8,3
+B fold 1,test,6,2,33,39,13,1,7
+B fold 2,train,12,5,70,151,34,3,7
+B fold 2,val,6,2,53,43,11,4,10
+B fold 2,test,6,2,69,91,7,8,3
+B fold 3,train,12,4,102,130,20,9,10
+B fold 3,val,6,3,37,112,21,2,0
+B fold 3,test,6,2,53,43,11,4,10
+B fold 4,train,12,4,122,134,18,12,13
+B fold 4,val,6,2,33,39,13,1,7
+B fold 4,test,6,3,37,112,21,2,0

@@ -12,6 +12,7 @@ Results: TBD. No experiment has run yet.
 - `src/proctor_assist/`: Python package with all core logic.
 - `tests/`: pytest tests.
 - `manifests/`: SHA-256 manifest of the raw data (`docs/decisions.md` D11).
+- `splits/subjects.json`: the fixed subject splits for protocols A and B (`docs/decisions.md` D15).
 - `results/`: small result files that scripts write. `results/eda/` holds the EDA tables and figures.
 - `notebooks/colab.ipynb`: Colab bootstrap. It mounts Drive, clones or pulls, installs, and runs commands.
 - `docs/`: plan, decisions, and AI usage log.
