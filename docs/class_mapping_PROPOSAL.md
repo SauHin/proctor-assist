@@ -1,11 +1,29 @@
 # PROPOSAL: class mapping and label cleaning
 
 **Status: PROPOSAL. An AI wrote this draft on 2026-11-10. It is not a decision.**
-The owner decides each point and writes the final version in `docs/decisions.md`. Until then,
-no code uses this file.
+The decision is D14 in `docs/decisions.md`. The owner made it in the chat on 2026-11-10. This
+file stays as the record of the options that the owner did not choose. No code uses this file.
 
 Sources of every number: `results/eda/summary.md` and the CSV files next to it. The meaning of
 the type codes is in `docs/decisions.md` (D12).
+
+## Answers of the owner (from the chat, 2026-11-10)
+
+The owner answered these multiple-choice questions in three rounds, and then accepted a final
+recap. D14 is the record.
+
+| Round | Question | Answer of the owner |
+|---|---|---|
+| 1 | Who types the decisions into `docs/decisions.md`? | Claude records the answers of the owner (D16). |
+| 1 | Code 3 (masked, as PLAN §4 proposes): seconds that also have code 1 or 2? | The visible code wins. Only the seconds with code 3 alone are masked. |
+| 1 | subject7 line 14 `0900 00903 6` | Read it as `0900 0903 6`. |
+| 1 | subject7 duplicate rows | Keep one copy. |
+| 1 | subject8 line 3 `0112 1019 3` | Keep it as it is. |
+| 1 | End second | An interval is [start, end). `0221 0223` is 2 s. |
+| 2 | Check of `code5.jpg`: is a phone at the ear in most frames? | Yes, in 5 frames or more. |
+| 2 | Classes (where code 6 goes) | Option A: code 6 joins code 1. |
+| 2 | subject1 line 6 `0230 0336 2` | Correct it to `0230 0236 2`. |
+| 3 | Different classes that share a second | The rare class wins: 3, then 1, then 2. |
 
 ## What the data shows
 
@@ -43,7 +61,9 @@ yourself.
 
 Consequence for protocol A (PLAN §6): the test set is the 9 real exam takers and 1 actor. The
 real exam takers have no code 5. Thus the "phone call" class in the test set comes from that
-one actor only. The choice of this actor changes the F1 of that class.
+one actor only. The choice of this actor changes the F1 of that class. With the splits of D15,
+this actor is subject24, with 2 intervals of code 5 (`results/splits/composition.csv`). For
+option B, note that the test set of fold 4 in protocol B has no interval of code 6.
 
 ## Decision 2: the Internet type (code 3)
 

@@ -47,9 +47,13 @@ This project is graded, and fabricated evidence is an academic integrity violati
 - Never write, estimate, or "fill in" any metric, training time, or result. Every number in
   docs, READMEs, figures, or the report must come from a saved result file produced by
   running code. If a result does not exist yet, write `TBD` and say so.
-- Never create or edit the final class mapping (OEP types to project classes), ground-truth
-  labels, or any tester or user responses. You may propose drafts, but mark them clearly as
-  `PROPOSAL` in a separate file; the owner decides and writes the final version.
+- Never decide the final class mapping (OEP types to project classes), ground-truth labels,
+  or any tester or user responses. The owner decides each point in the chat, from
+  multiple-choice questions. After that, you can record the answers of the owner in
+  `docs/decisions.md`, word for word. Mark them as "decided by the owner in chat" with the
+  date. You can also write the files that follow from these answers. Never pick an option yourself,
+  and never record a check that the owner did not report. A draft stays in a separate file
+  that is marked `PROPOSAL`. (Changed by the owner on 2026-11-10, D16.)
 - Never generate fake or synthetic data and present it as real.
 - After substantial help, add a short entry to `docs/ai_usage_log.md` yourself, and follow
   the rules section in that file. Do not ask the owner for missing details. For an unknown
@@ -120,6 +124,14 @@ This project is graded, and fabricated evidence is an academic integrity violati
   - large design choices with real trade-offs. Give the options and a recommendation.
   - actions that are hard to undo: package installs in Colab, deleted files, GPU jobs longer
     than a few minutes, commits, and pushes.
+- Owner decisions stay in the chat (D16). Ask each one as a multiple-choice question. Give a
+  recommendation, and the gain and the cost of each option.
+- Ask in dependency order: a decision that other decisions depend on comes first. Say what
+  each question depends on and what it changes. If an answer makes an earlier answer invalid
+  or conflicts with the plan, stop and say so. Answers are provisional until the owner
+  accepts a final recap.
+- For each check that the owner must do, say what to open and what to look at. Say which
+  result is expected, and what each result means for the decision.
 - Check facts against a primary source before you use them. If a fact is not checked yet,
   write "not verified" or `TBD`.
 - If something blocks the work, ask the owner in one message. Otherwise, keep working.

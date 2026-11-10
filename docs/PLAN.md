@@ -29,7 +29,7 @@ authority on what must be delivered.
 In scope:
 - Webcam video only.
 - The visible cheating types in OEP: reading text, talking to a person in the room, a phone
-  call, and phone use. The final class mapping is an owner decision at milestone 2.
+  call, and phone use. The owner decided the class mapping at milestone 2 (D14).
 - One experiment track (§5), with a reproduced paper method as the reference and the app
   fallback.
 - A proctor dashboard app (§7).
@@ -79,11 +79,10 @@ Out of scope (decided, do not reintroduce without discussion):
 - **What the label files hold (milestone 2):** 565 rows with the type codes 1, 2, 3, 5, and
   6, not 1 to 5 as in the paper. D12 gives the meaning of the codes.
   `results/eda/summary.md` gives the statistics.
-- **Ground truth:** the OEP intervals. The mapping from the 5 OEP types to the project
-  classes is an owner decision at milestone 2. Proposal: the 4 classes of the reference
-  paper (no cheat, read text, ask a person, call a friend). Intervals of the type "use the
-  Internet" are masked: they are left out of training and evaluation, not labeled "no
-  cheat".
+- **Ground truth:** the OEP intervals, with the class mapping and the label cleaning of D14
+  (owner decision, 2026-11-10). There are 4 classes: no cheat, looks at an object, talks to a
+  person, and phone call. Intervals of the type "use the Internet" are masked: they are left
+  out of training and evaluation, not labeled "no cheat".
 - **Limitations to state in the report:** most cheating is acted. All data comes from one
   university setting in 2015, and 24 people is a small sample.
 
