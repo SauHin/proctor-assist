@@ -342,3 +342,66 @@ owner did not choose are in `docs/class_mapping_PROPOSAL.md`.
 - The EDA still reads the raw rows, so `results/eda/` describes the files as they are.
 - Reason for constants in the code: the values change only by an owner decision, and a test
   checks each rule of D14. A YAML file (D7) starts with the first experiment.
+
+## D18. Frame extraction and windows (decided by the owner in chat, 2026-11-10)
+
+The owner chose each point from a multiple-choice question in the chat, and then accepted a
+final recap (D16). The AI wrote the options and typed this record.
+
+- Frame rate: 5 fps. The code keeps every 5th frame of the 25 fps video.
+- Stored frame: the whole image, resized to 224 x 224, with no crop. The P1 paper uses the
+  same input size (checked on the MDPI page of the paper, section 3.4).
+- Window target: the D14 label of the last second of the window. All models answer the same
+  question: is this second cheating?
+- Window length for E1, E2, and E3: 3 s (15 frames), with one window per second.
+- A window is formed when the data is read, not at extraction. Thus both window choices are
+  cheap to change.
+- Open until milestone 4 (D8): where the processed data lives for Colab, and how it gets
+  there.
+- Reasons, from the options that the owner chose:
+  - 5 fps: a window of 2 to 4 s holds 10 to 20 frames, which is enough for the temporal
+    models. The per-frame models can use a part of the frames. One extraction serves all
+    models. The cost: 5 times more frames than at 1 fps.
+  - 224 x 224, whole image: the smallest option, and no resize is necessary during training.
+    A second person at the edge of the frame stays visible. The cost: the 4:3 image is
+    squeezed a little.
+  - Last second as target: the per-frame models and the temporal models get the same target.
+    Only the input differs, so the comparison of P1 with E1 is fair. No short cheating span
+    is lost. The cost: at the start of an event, most of the window still shows normal work.
+  - 3 s: the middle of the range in PLAN §5. The cost: more CPU work per window than 2 s.
+- Options that the owner did not choose: 1, 2, or 25 fps. Frames of 320 x 240 or 640 x 480.
+  A target from the majority of the seconds, or from any cheating second. Windows of 2 or
+  4 s.
+- The questions gave sizes that were estimates from 2 subjects. The real numbers are in
+  `results/frames/`, from the extraction run.
+- Not in the P1 paper: the paper gives no frame rate. It reports 9000 training frames and
+  7000 test frames.
+
+## D19. Extraction and window code (2026-11-10)
+
+These are AI choices inside D18. They are easy to change.
+
+- Files: `data/processed/frames/subjectN/000000.jpg` and so on. Frame k is at k / 5 seconds.
+  Second t has the frames 5t to 5t + 4.
+- The JPEG quality is 90. The resize uses area interpolation.
+- One function, `frames.preprocess`, does the resize. The app must use the same function
+  (PLAN §7).
+- The script writes a marker file for each subject as its last step. After an interruption,
+  the next run extracts that subject again.
+- If `splits/subjects.json` does not cover all subjects, the script stops. Thus no frame is
+  extracted before the split.
+- A subject has `frames_saved // 5` whole seconds. A partial second at the end is dropped.
+- A window ends at second t and holds 15 frames. Seconds 0 and 1 have no full window before
+  them, so they give no window. There is no padding.
+- The mask applies to the target only. A masked second gives no window. Its frames can
+  still be input for a later window.
+- `results/frames/summary.csv` gives the number of seconds per subject to the window code.
+  Thus Colab does not need to count files.
+- Result of the run (`results/frames/summary.json`): 125706 frames, 1.449 GB, and 25132 whole
+  seconds. For all 24 videos, the decoded frame count equals the count in the header. This
+  closes the open point of D13.
+- `results/windows/summary.csv` gives the windows per class for each part of each split. The
+  classes are not balanced. Milestone 4 must handle this.
+- Rejected: frames as arrays without compression. One 224 x 224 frame with 3 channels is
+  about 150 KB, and the JPEG files are about 12 KB per frame. Rejected: decode from the video
+  during training. Each window then needs a seek in the video and a decode.
