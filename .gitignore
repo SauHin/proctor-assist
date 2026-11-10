@@ -16,5 +16,8 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 
+# Editor settings of the owner
+.vscode/
+
 # Playwright MCP snapshots and logs
 .playwright-mcp/

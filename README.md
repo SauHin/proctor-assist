@@ -12,6 +12,7 @@ Results: TBD. No experiment has run yet.
 - `src/proctor_assist/`: Python package with all core logic.
 - `tests/`: pytest tests.
 - `manifests/`: SHA-256 manifest of the raw data (`docs/decisions.md` D11).
+- `results/`: small result files that scripts write. `results/eda/` holds the EDA tables and figures.
 - `notebooks/colab.ipynb`: Colab bootstrap. It mounts Drive, clones or pulls, installs, and runs commands.
 - `docs/`: plan, decisions, and AI usage log.
 
@@ -39,6 +40,16 @@ To download the data:
 
 The first run writes `manifests/oep_raw.sha256`. Each later run checks every file against it.
 If you run the script again after an interruption, it skips the complete files.
+
+## Run the EDA
+
+The EDA reads the labels and the webcam videos in `data/raw/oep/`. It writes tables,
+`summary.md`, and figures to `results/eda/`. It writes sample frames to `data/eda/`, which is
+never committed.
+
+```bash
+.venv/Scripts/python -m proctor_assist.eda
+```
 
 ## Run locally
 
