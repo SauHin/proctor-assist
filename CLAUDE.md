@@ -27,8 +27,9 @@ owner-decided mapping from OEP types to project classes.
 
 The package is `src/proctor_assist/`. Why this topic was chosen: `docs/decisions.md` D9.
 
-`docs/PLAN.md` fixes goals, scope, and constraints. Implementation details are open:
-discuss options with the owner, then record the decision in `docs/decisions.md`.
+`docs/PLAN.md` fixes goals, scope, and constraints. Implementation details are open. Decide
+or discuss them as "How to work with me" says, and record each decision in
+`docs/decisions.md`.
 
 ## Scope rules
 
@@ -106,8 +107,21 @@ This project is graded, and fabricated evidence is an academic integrity violati
 
 ## How to work with me
 
-- Work one milestone of `docs/PLAN.md` at a time. Before writing code, discuss the approach
-  and trade-offs, then wait for approval.
+- The goal is the anchor, and the plan is a first hypothesis. If reality differs from the
+  plan, adapt the steps, check the result, and record the reason in `docs/decisions.md`.
+  Goals, scope, and the rules in this file do not change.
+- Work one milestone of `docs/PLAN.md` at a time.
+- For small implementation choices that are easy to undo, decide yourself. Explain the
+  reason in one or two sentences, and record the choice in `docs/decisions.md`.
+- Ask the owner first for:
+  - owner decisions: the class mapping, labels and ground truth, and changes to the
+    experiment design (PLAN §5).
+  - large design choices with real trade-offs. Give the options and a recommendation.
+  - actions that are hard to undo: package installs in Colab, deleted files, GPU jobs longer
+    than a few minutes, commits, and pushes.
+- Check facts against a primary source before you use them. If a fact is not checked yet,
+  write "not verified" or `TBD`.
+- If something blocks the work, ask the owner in one message. Otherwise, keep working.
 - Explain non-obvious design choices so the owner can defend them in the report and
   presentation.
 - After finishing, run the tests, list what changed, and note decisions in `docs/decisions.md`.
