@@ -121,3 +121,26 @@ to this project on 2026-11-10.
   reason.
 - P1 keeps the configuration of the reference paper, because P1 is the proven method and
   the app fallback.
+
+## D11. OEP download: webcam subset, renamed videos, committed manifest (2026-11-10)
+
+- Decision (owner): download only `READ_ME.txt`, the 24 `gt.txt` files, and the 24 webcam
+  videos from the Kaggle mirror, not all 12.08 GB. The script is
+  `python -m proctor_assist.download`.
+- Reason: audio and the wearcam are out of scope (PLAN §2). The full download is one zip, so
+  the zip and its extracted files must fit on the disk at the same time. The drive of the
+  repository does not have that space free. Also, less personal data is stored.
+- Layout: `ROOT/data/raw/oep/` holds `READ_ME.txt`, `subjectN/gt.txt`, and
+  `subjectN/webcam.avi`. `READ_ME.txt` names the webcam video `<username>1.avi`. The rename
+  keeps the usernames of the subjects out of the repository, the logs, and the app. The file
+  content does not change.
+- Manifest: `manifests/oep_raw.sha256` (`sha256sum` format) is committed. The first run writes
+  it. Each later run, on any machine or in Colab, compares its files with it and fails on a
+  difference. This is the check that D8 asks for.
+- Source: the Kaggle mirror is the only source that is still reachable. On 2026-11-10, the
+  original MSU download link redirected to the department homepage, and `cvlab.cse.msu.edu`
+  refused connections. The archived MSU dataset page (Wayback Machine, 2024) asks for a
+  citation of the paper and names no license.
+- Rejected: download all files. Rejected: keep the original file names. Rejected: a manifest
+  only in the data folder, because then the local copy and the Drive copy have no shared
+  reference.

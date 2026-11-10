@@ -64,15 +64,18 @@ Out of scope (decided, do not reintroduce without discussion):
 - **Dataset:** MSU Online Exam Proctoring (OEP) dataset, from Atoum et al., "Automated
   Online Exam Proctoring", IEEE Transactions on Multimedia 19(7), 2017. Cite this paper.
   Kaggle mirror: `raajanwankhade/oep-dataset`, 12.08 GB for all files (Kaggle file
-  listing). The license on Kaggle is "Unknown".
+  listing). The license on Kaggle is "Unknown". The original MSU page asks for a citation and
+  names no license (D11).
 - **Content, as the OEP paper reports it:** 24 subjects, all students at Michigan State
   University. 15 actors pretended to take the exam and cheated freely. 9 subjects took a
   real exam, and the proctor induced the cheating (talking, walking up, handing a book).
   Sessions are 17 min on average. There are 569 cheating instances of 5 types, and about
   20% of the video time is cheating.
 - **Files per subject:** `gt.txt` (cheating intervals: start, end, type), one audio file,
-  and two videos. From the file sizes, `*1.avi` (3.93 GB in total) is probably the webcam.
-  Check this with `READ_ME.txt` at milestone 2.
+  and two videos. `READ_ME.txt` says that `<username>1.avi` is the webcam above the
+  monitor and `<username>2.avi` is the wearcam on the eyeglasses. The project downloads only
+  the webcam videos (3.93 GB in total, Kaggle file listing), `gt.txt`, and `READ_ME.txt`
+  (D11).
 - **Ground truth:** the OEP intervals. The mapping from the 5 OEP types to the project
   classes is an owner decision at milestone 2. Proposal: the 4 classes of the reference
   paper (no cheat, read text, ask a person, call a friend). Intervals of the type "use the

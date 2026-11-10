@@ -11,6 +11,7 @@ Results: TBD. No experiment has run yet.
 
 - `src/proctor_assist/`: Python package with all core logic.
 - `tests/`: pytest tests.
+- `manifests/`: SHA-256 manifest of the raw data (`docs/decisions.md` D11).
 - `notebooks/colab.ipynb`: Colab bootstrap. It mounts Drive, clones or pulls, installs, and runs commands.
 - `docs/`: plan, decisions, and AI usage log.
 
@@ -22,7 +23,22 @@ gitignored `data/` and `runs/` folders. In Colab, they live on Google Drive unde
 
 The project uses the MSU Online Exam Proctoring (OEP) dataset (Atoum et al., IEEE
 Transactions on Multimedia, 2017), through the Kaggle mirror `raajanwankhade/oep-dataset`.
-The download script is part of milestone 1. Never commit videos, frames, or landmark files.
+The download script gets only the files that the project uses: `READ_ME.txt`, the 24 `gt.txt`
+files, and the 24 webcam videos (`docs/decisions.md` D11). Never commit videos, frames, or
+landmark files.
+
+To download the data:
+
+1. Put your Kaggle API token in `~/.kaggle/access_token`, or set `KAGGLE_API_TOKEN`.
+2. Run the download script. It saves the files to `data/raw/oep/`. If `PROCTOR_ROOT` is set,
+   it uses `$PROCTOR_ROOT/data/raw/oep/` instead.
+
+```bash
+.venv/Scripts/python -m proctor_assist.download
+```
+
+The first run writes `manifests/oep_raw.sha256`. Each later run checks every file against it.
+If you run the script again after an interruption, it skips the complete files.
 
 ## Run locally
 
