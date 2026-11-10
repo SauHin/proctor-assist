@@ -1,6 +1,7 @@
 """Train one model from a YAML config and write a run folder (D3, D21).
 
 Run: python -m proctor_assist.train configs/p1_a.yaml
+     python -m proctor_assist.train configs/p1_b.yaml --fold 2                (protocol B, fold 2)
      python -m proctor_assist.train configs/p1_a.yaml --resume <run folder>   (after a disconnect)
      python -m proctor_assist.train configs/p1_a.yaml --smoke                 (short check, CPU is enough)
 
@@ -11,7 +12,6 @@ import argparse
 import json
 import os
 import random
-import shutil
 import time
 from pathlib import Path
 
@@ -145,13 +145,17 @@ def main():
     parser.add_argument("config")
     parser.add_argument("--resume", help="run folder to continue")
     parser.add_argument("--smoke", action="store_true", help="short check with a few rows")
+    parser.add_argument("--fold", type=int, help="fold of protocol B, from 1 to 4")
     args = parser.parse_args()
     cfg = yaml.safe_load(Path(args.config).read_text())
+    if args.fold:
+        cfg = cfg | {"fold": args.fold, "name": f"{cfg['name']}_f{args.fold}"}
     if args.resume:
         run_dir = Path(args.resume)
     else:
         run_dir = new_run_dir(cfg["name"] + ("-smoke" if args.smoke else ""))
-        shutil.copy(args.config, run_dir / "config.yaml")
+        # The values that the run uses, with the fold. The file in configs/ has the comments.
+        (run_dir / "config.yaml").write_text(yaml.safe_dump(cfg, sort_keys=False))
     metrics = run(cfg, run_dir, args.smoke)
     print(f"run folder: {run_dir}")
     print(json.dumps({part: {k: metrics[part][k] for k in ("macro_f1", "baseline_macro_f1", "roc_auc_cheat")} for part in ("val", "test")}))

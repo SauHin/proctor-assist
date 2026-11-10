@@ -68,3 +68,32 @@ def test_run_writes_the_run_files_resumes_and_stops_early(tmp_path, monkeypatch)
     second.mkdir()
     stopped = train.run(cfg | {"epochs": 10, "patience": 1, "lr": 0.0}, second)  # no learning, so no better epoch
     assert stopped["epochs_run"] == 2 and stopped["best_epoch"] == 1
+
+
+def test_per_subject_and_per_code_tables_on_toy_scores():
+    from proctor_assist import evaluate
+
+    scores = pd.DataFrame(
+        {"part": "val", "subject": 1, "t": [0, 1, 2, 3], "target": [0, 0, 1, 1], "p0": [0.9, 0.8, 0.3, 0.6]}
+    )
+    row = evaluate.per_subject(scores).iloc[0]
+    assert (row.seconds, row.cheat_seconds, row.roc_auc_cheat) == (4, 2, 1.0)
+    assert row.mean_suspicion_cheat == pytest.approx(0.55) and row.group == "actor"
+
+    labels = pd.DataFrame({"subject": [1, 1], "start_s": [2, 3], "end_s": [4, 4], "code": [1, 6]})
+    codes = evaluate.per_code(scores, labels).set_index("code")
+    assert codes.seconds.to_dict() == {0: 2, 1: 2, 6: 1}  # second 3 has the codes 1 and 6
+    assert codes.share_suspicion_over_half[1] == 0.5 and codes.mean_suspicion[6] == pytest.approx(0.4)
+
+
+def test_the_protocol_b_config_equals_the_protocol_a_config_and_picks_its_fold():
+    import yaml
+
+    from proctor_assist import splits
+    from proctor_assist.env import REPO
+
+    a = yaml.safe_load((REPO / "configs" / "p1_a.yaml").read_text())
+    b = yaml.safe_load((REPO / "configs" / "p1_b.yaml").read_text())
+    assert {k for k in a if a[k] != b[k]} == {"name", "protocol"}
+    assert train.split_of(b | {"fold": 2}) == splits.load_splits()["protocol_b"][1]
+    assert train.split_of(a) == splits.load_splits()["protocol_a"]
