@@ -1,0 +1,7 @@
+part,code,seconds,subjects,mean_suspicion,share_suspicion_over_half
+all,0,18396,24,0.2349,0.0852
+all,1,1435,22,0.4101,0.3303
+all,2,3578,23,0.2675,0.1023
+all,3,52,3,0.2851,0.0577
+all,5,110,4,0.2128,0.0727
+all,6,432,8,0.4254,0.2407

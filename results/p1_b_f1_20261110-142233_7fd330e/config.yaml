@@ -1,0 +1,18 @@
+name: p1_b_f1
+model: p1
+protocol: b
+seed: 0
+epochs: 20
+patience: 10
+batch_size: 16
+lr: 0.0001
+dense_layers: 5
+units: 128
+pretrained: true
+balanced_sampling: true
+augment:
+  degrees: 15
+  translate: 0.1
+  scale: 0.1
+  hflip: true
+fold: 1

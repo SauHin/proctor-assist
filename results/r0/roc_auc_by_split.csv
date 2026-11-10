@@ -1,0 +1,11 @@
+split,part,seconds,roc_auc_cheat
+A,val,2733,0.8373
+A,test,11742,0.5321
+B fold 1,val,6257,0.6194
+B fold 1,test,5236,0.7101
+B fold 2,val,6042,0.6658
+B fold 2,test,6257,0.6194
+B fold 3,val,6148,0.6046
+B fold 3,test,6042,0.6658
+B fold 4,val,5236,0.7101
+B fold 4,test,6148,0.6046

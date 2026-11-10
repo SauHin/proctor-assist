@@ -1,0 +1,16 @@
+{
+  "model": "r0",
+  "full_turn_degrees": 30.0,
+  "seconds": 23683,
+  "roc_auc_cheat_all_subjects": 0.6284772230112442,
+  "share_of_seconds_with_a_face": {
+    "min": 0.6010498687664042,
+    "mean": 0.8745602852181108
+  },
+  "run": {
+    "time_utc": "2026-11-10T16:36:44+00:00",
+    "git_sha": "7fd330e",
+    "git_dirty": true,
+    "python": "3.13.14 (tags/v3.13.14:fd17997, Jun 10 2026, 13:03:48) [MSC v.1944 64 bit (AMD64)]"
+  }
+}
