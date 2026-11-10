@@ -429,3 +429,89 @@ point of D8.
   - Each file in a zip has a fixed date. Thus the same frames give the same zip bytes.
 - Colab MCP: the connection test passed on 2026-11-10. The server connected to a notebook
   and ran a cell.
+- Check in Colab on 2026-11-10, on a GPU runtime: `unpack` accepted all 24 zip files. The
+  frame count of each subject equals `results/frames/summary.csv`. The setup check wrote
+  `runs/setup-check_20261110-124207_d008233/env.json` on Drive, and `pytest` passed (the 3
+  tests that need the raw videos were skipped).
+- Limits that this test showed:
+  - A tool cannot mount Google Drive. The owner must run the mount cell in the Colab tab and
+    allow the access.
+  - A change of the runtime type empties the local disk and drops the tool connection. Then
+    the clone, the install, and `unpack` must run again.
+  - In the Colab GPU runtime, `cv2` is version 4.14.0. The laptop has 5.0.0. The frames come
+    from the laptop, so the extraction is the same. The JPEG decode can differ a little.
+    Milestone 4 must measure this before the first training run.
+
+## D21. P1 design (decided by the owner in chat, 2026-11-10)
+
+The owner chose each point from a multiple-choice question in the chat, and then accepted a
+final recap (D16). The AI wrote the options and typed this record.
+
+- Backbone: MobileNetV2 with pretrained weights. All layers are fine-tuned.
+- Frames: training uses all stored frames, 5 per second. The score of a second comes from
+  its last frame.
+- Augmentation: the types of the paper, with realistic sizes. Rotation up to 15 degrees,
+  shift and zoom up to 10%, and horizontal flip. No vertical flip. This is a deviation from
+  the paper (D10).
+- Class imbalance: balanced sampling, as in the paper. Each class has the same chance in a
+  batch.
+- From the paper, with no change (section 3.4 and Table 1 of the paper):
+  - Input of 224 x 224, and softmax over 4 classes.
+  - Adam, with a learning rate of 0.0001 and a batch size of 16.
+  - At most 20 epochs, and early stopping with patience 10.
+  - 5 dense layers.
+- Different from the paper by a project rule: the validation set is 3 held-out subjects
+  (D15). The paper used 5-fold cross-validation on frames. Frames of one subject are then in
+  the training part and in the validation part. Also, the classes are those of D14.
+- AI choices where the paper gives no value. They are easy to change (D10):
+  - Head: a 3 x 3 convolution with 100 filters, then max pooling 2 x 2, then flatten to 400
+    values. After that come 5 dense layers of 128 units with ReLU, and the output layer. The
+    sizes 5 x 5 x 100 and 400 in the paper fit this order of layers.
+  - Early stopping looks at the validation loss.
+  - The framework is PyTorch, with the ImageNet weights from torchvision.
+- Reasons, from the options that the owner chose:
+  - Fine-tune: the features can adapt to head poses and to a phone at the ear. The cost:
+    each training run needs a GPU, and 11 training subjects give a risk of overfitting.
+  - All frames for training, one frame for the score: the rare classes get 5 times more
+    examples. P1 still decides from one frame, so the comparison with E1 stays clean.
+  - Realistic augmentation: a webcam never gives a face that is upside down.
+  - Balanced sampling: the model cannot win with "no cheat" for each frame. The cost: the
+    same phone call frames come back often.
+- Options that the owner did not choose: a frozen backbone. Training on 1 frame per second.
+  A score from the mean of 5 frames. The exact augmentation of the paper, or none. Class
+  weights in the loss, or no handling of the imbalance.
+- Facts from the paper for the comparison (MDPI page, Tables 2 to 4):
+  - 84.52% is the macro F1 of the best of 5 folds. The mean of the 5 folds is 80.81%.
+  - The source of these scores is not clear in the paper: the test set, or the validation
+    folds.
+  - Table 4 names the class "5 (Call Friend)". This supports the reading of code 5 in D12.
+  - The paper gives no dense units, no augmentation sizes, and no frame rate.
+
+## D22. Training code for the per-frame models (2026-11-10)
+
+These are AI choices inside D21. They are easy to change.
+
+- One command trains a model from a YAML file (D7): `python -m proctor_assist.train
+  configs/p1_a.yaml`. The YAML file holds each value of D21 with a comment on its source.
+- Run folder (D3): `config.yaml`, `env.json`, `history.csv` with one row per epoch, `last.pt`,
+  `best.pt`, `metrics.json`, and the class probabilities per second for the validation and
+  test subjects. The scores per second are the input for the event metrics of milestone 6.
+- After a disconnect, `--resume <run folder>` continues the run from `last.pt`.
+- One epoch draws as many frames as the training table has. With balanced sampling, a frame
+  of a rare class is drawn many times, and a frame of class 0 is not always drawn.
+- The validation loss and all metrics use one frame per second, without balanced sampling.
+  Thus they show the data as it is.
+- All models are scored on the same seconds: those with a full window of 3 s before them.
+- `metrics.json` also has a baseline that gives the largest training class for each row. A
+  trained model must beat it (PLAN §5).
+- The frames are read with torchvision, not with OpenCV. `python -m proctor_assist.data`
+  prints one hash of the decoded pixels of 72 frames. The hash on the laptop and the hash in
+  Colab must be equal before a training run. This is the check that D20 asks for.
+- ImageNet weights: `IMAGENET1K_V1` of torchvision, the original weights of MobileNetV2.
+- Dependencies in `pyproject.toml`, not pinned (D5): torch, torchvision, scikit-learn, and
+  pyyaml. The laptop got torchvision 0.29.2, which matches its torch 2.14.1.
+- Labels in Colab: `pack` also copies the 24 `gt.txt` files into the Drive folder. `unpack`
+  checks them against `manifests/oep_raw.sha256`. Reason: the training builds its targets
+  from `gt.txt`, and the labels do not go into the public repository.
+- `--smoke` runs 2 short epochs on a few rows with no pretrained weights. It only shows
+  that the pipeline works. Its numbers are not results.
