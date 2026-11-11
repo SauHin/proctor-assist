@@ -873,3 +873,78 @@ These are AI choices inside D32. They are easy to change.
   Thus E2 trains on the laptop, as D32 allows.
 - No fitted statistic: the normalization uses the shoulders of the same frame. Thus there
   is no risk of test data in a statistic.
+
+## D35. Finding: E2 is below P1 on new people (2026-11-11)
+
+This entry is a result, not a choice. All numbers come from the 5 run folders `results/e2_*`,
+`results/e2_b_summary.csv`, and `results/e2_b_test_per_subject.csv`. The runs used the code at
+`24dcdc0` on the laptop CPU. E2 has 38852 trainable parameters. One run took from
+50 s to 101 s.
+
+  | Run | E2 test ROC-AUC | P1 test ROC-AUC | E2 test macro F1 | Baseline macro F1 | E2 epochs (best) |
+  |---|---|---|---|---|---|
+  | Protocol A | 0.569 | 0.631 | 0.276 | 0.210 | 20 (13) |
+  | Protocol B fold 1 | 0.573 | 0.642 | 0.457 | 0.228 | 20 (16) |
+  | Protocol B fold 2 | 0.589 | 0.657 | 0.351 | 0.207 | 11 (1) |
+  | Protocol B fold 3 | 0.619 | 0.622 | 0.302 | 0.231 | 20 (10) |
+  | Protocol B fold 4 | 0.669 | 0.855 | 0.366 | 0.209 | 20 (15) |
+  | Protocol B mean (std) | 0.612 (0.042) | 0.694 (0.108) | 0.369 | | |
+
+- Mean ROC-AUC per subject on protocol B:
+
+  | Group | E2 | E1 | P1 | R0 |
+  |---|---|---|---|---|
+  | Actors | 0.661 | 0.658 | 0.665 | 0.753 |
+  | Real exam takers | 0.601 | 0.816 | 0.803 | 0.550 |
+
+- E2 is better than P1 for 5 of the 15 actors and for 0 of the 9 real exam takers.
+- E2 overfits less than P1 and E1: most runs kept a late epoch, and the spread between the
+  folds is smaller. But it separates cheating from no cheat less well.
+- Reading: the hypothesis of D31 was that landmarks transfer better to new people, because
+  they do not carry the look of a person. The data does not support it for this design. The
+  real exam takers mostly talk (code 2). Talk shows in the mouth and in a second person in
+  the image. The landmarks of E2 see the mouth of the subject, but not the second person.
+  This reading is not tested.
+- Limits: one seed per run. One design of the input (D34). Scores per second. The event
+  metrics come at milestone 6.
+
+## D36. Finding: B1 and P1s, the controls for research question 2 (2026-11-11)
+
+This entry is a result, not a choice. All numbers come from the run folders `results/b1_*`
+and `results/p1s_*`, `results/b1_b_summary.csv`, `results/p1s_b_summary.csv`, and the two
+`*_test_per_subject.csv` files. All runs used a GPU NVIDIA L4. B1 folds 1 and 2 and
+protocol A used the code at `de3fbb1`, and the other runs used `0c9b579`. Between these
+commits, only the E1 path changed. The frame path of B1 and P1s is the same. B1 has 390404
+trainable parameters. P1 and P1s have 3493864.
+
+  | Run | P1 test ROC-AUC | P1s test ROC-AUC | B1 test ROC-AUC | P1 / P1s / B1 test macro F1 | Baseline macro F1 |
+  |---|---|---|---|---|---|
+  | Protocol A | 0.631 | 0.600 | 0.544 | 0.423 / 0.288 / 0.239 | 0.210 |
+  | Protocol B fold 1 | 0.642 | 0.587 | 0.608 | 0.294 / 0.275 / 0.384 | 0.228 |
+  | Protocol B fold 2 | 0.657 | 0.670 | 0.681 | 0.357 / 0.394 / 0.352 | 0.207 |
+  | Protocol B fold 3 | 0.622 | 0.518 | 0.592 | 0.322 / 0.278 / 0.314 | 0.231 |
+  | Protocol B fold 4 | 0.855 | 0.656 | 0.669 | 0.639 / 0.323 / 0.363 | 0.209 |
+  | Protocol B mean (std) | 0.694 (0.108) | 0.608 (0.070) | 0.638 (0.044) | 0.403 / 0.317 / 0.353 | |
+
+- Mean ROC-AUC per subject on protocol B:
+
+  | Group | P1 | P1s | B1 | R0 |
+  |---|---|---|---|---|
+  | Actors | 0.665 | 0.620 | 0.710 | 0.753 |
+  | Real exam takers | 0.803 | 0.654 | 0.740 | 0.550 |
+
+- Compared with P1 per subject: P1s is better for 5 of the 15 actors and 2 of the 9 real
+  exam takers. B1 is better for 9 of the 15 actors and 4 of the 9 real exam takers.
+- Epochs on protocol B (mean): P1s ran 14.75 and kept epoch 4.75. B1 ran 15.0 and kept
+  epoch 6.25. One run took from 21 to 52 minutes.
+- Reading for research question 2: P1 (ImageNet weights) is better than P1s (random
+  weights) on 4 of the 5 splits and on the mean of protocol B. Fold 2 is the exception.
+  Thus pretraining helps here, mostly on the real exam takers.
+- Reading for B1: on the mean of protocol B, the small CNN from scratch is better than the
+  large network from scratch (P1s). B1 also has the smallest spread of the three. It is
+  below P1 on the mean and on the real exam takers, but above P1 on the actors. On
+  protocol A, B1 is the lowest of the three.
+- Limits: one seed per run, so a difference of a few hundredths between two runs can be
+  noise. Scores per second. The event metrics come at milestone 6.
+- Not in the repository: the Drive folder `b1_b_f3_20261110-203400_de3fbb1` holds only a
+  config and an env file of the stopped run of D30. It stays until the owner decides.
