@@ -51,8 +51,12 @@ def _tools():
     )
 
 
-def extract(subject, n_frames):
-    """Raw landmarks of the first n_frames stored frames of one video. A part that is not found is NaN."""
+def extract(subject, n_frames, change=None, keep=None):
+    """Raw landmarks of the first n_frames stored frames of one video. A part that is not found is NaN.
+
+    `change(frame)` alters each frame first, for the tests under changed conditions (D40).
+    `keep(k, frame)` gets stored frame k after the change.
+    """
     import mediapipe as mp
 
     face_tool, hand_tool, pose_tool = _tools()
@@ -69,6 +73,10 @@ def extract(subject, n_frames):
         if not ok:
             break
         if i % frames.STEP == 0:
+            if change:
+                frame = change(frame)
+            if keep:
+                keep(k, frame)
             image = mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(frame[:, :, ::-1]))
             face, hands, pose = face_tool.detect(image), hand_tool.detect(image), pose_tool.detect(image)
             if face.face_landmarks:
