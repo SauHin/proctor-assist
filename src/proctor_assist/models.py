@@ -46,7 +46,19 @@ class B1(nn.Module):
         return self.net(x)
 
 
-MODELS = {"p1": P1, "b1": B1}
+class E1(nn.Module):
+    """One GRU layer over the P1 features of the frames of a window, then the output layer (D29)."""
+
+    def __init__(self, n_classes=4, feature_size=128, hidden=64):
+        super().__init__()
+        self.gru = nn.GRU(feature_size, hidden, batch_first=True)
+        self.out = nn.Linear(hidden, n_classes)
+
+    def forward(self, x):  # x: windows x frames x feature size
+        return self.out(self.gru(x)[1][-1])  # the state after the last frame
+
+
+MODELS = {"p1": P1, "b1": B1, "e1": E1}
 
 
 def build(cfg, **override):

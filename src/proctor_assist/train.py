@@ -23,6 +23,7 @@ from sklearn.metrics import f1_score
 from torch import nn
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
+from proctor_assist import features
 from proctor_assist.data import FrameDataset, frame_table, transform
 from proctor_assist.env import new_run_dir
 from proctor_assist.metrics import report
@@ -55,11 +56,12 @@ def run(cfg, run_dir, smoke=False):
     random.seed(cfg["seed"])
     device = "cuda" if torch.cuda.is_available() else "cpu"
     split = split_of(cfg)
-    tables = {part: frame_table(split[part], train=part == "train") for part in ("train", "val", "test")}
+    windows = "features" in cfg  # E1 reads windows of stored features. The other models read frames.
+    tables = {p: frame_table(split[p], train=p == "train" and not windows) for p in ("train", "val", "test")}
     if smoke:  # a few rows and 2 epochs: this only shows that the pipeline works
         tables = {p: t.sample(n=min(len(t), 320 if p == "train" else 96), random_state=0) for p, t in tables.items()}
         cfg = cfg | {"epochs": 2, "pretrained": False}
-    workers = 0 if smoke else cfg.get("workers", min(8, os.cpu_count()))
+    workers = 0 if smoke or windows else cfg.get("workers", min(8, os.cpu_count()))
 
     counts = tables["train"].target.value_counts()
     sampler = None
@@ -67,10 +69,14 @@ def run(cfg, run_dir, smoke=False):
         weights = (1 / counts[tables["train"].target]).tolist()
         generator = torch.Generator().manual_seed(cfg["seed"])
         sampler = WeightedRandomSampler(weights, num_samples=len(weights), generator=generator)
-    train_data = FrameDataset(tables["train"], transform(cfg["augment"]))
-    loaders = {p: DataLoader(FrameDataset(tables[p], transform()), 128, num_workers=workers) for p in ("val", "test")}
+    if windows:
+        feats = features.load(cfg, device)
+        data = {p: features.SequenceDataset(t, feats) for p, t in tables.items()}
+    else:
+        data = {p: FrameDataset(t, transform(cfg["augment"] if p == "train" else None)) for p, t in tables.items()}
+    loaders = {p: DataLoader(data[p], 128, num_workers=workers) for p in ("val", "test")}
     loaders["train"] = DataLoader(
-        train_data, cfg["batch_size"], sampler=sampler, shuffle=sampler is None, num_workers=workers, drop_last=True
+        data["train"], cfg["batch_size"], sampler=sampler, shuffle=sampler is None, num_workers=workers, drop_last=True
     )
 
     model = build(cfg).to(device)

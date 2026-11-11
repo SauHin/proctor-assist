@@ -1,0 +1,18 @@
+# E1: P1 frame features and a GRU over a window, protocol B (docs/decisions.md D29).
+# All values equal configs/e1_a.yaml. Only the name and the protocol differ. A test checks this.
+# Give the fold on the command line: --fold 1 to --fold 4.
+name: e1_b
+model: e1            # GRU over the frames of a 3 s window (D18, D29)
+features: p1         # frame features from the P1 run of the same split, frozen (owner decision)
+hidden: 64           # units of the GRU layer
+protocol: b          # cross-validation folds, with actors and real exam takers in each fold (D15)
+seed: 0
+
+# From the reference paper (Educ. Sci. 2023, section 3.4 and Table 1).
+epochs: 20           # maximum number of epochs
+patience: 10         # early stopping
+batch_size: 16       # best value in Table 2 of the paper
+lr: 0.0001           # Adam
+
+# The same choice as for P1 (D21). E1 has no augmentation, because the features are stored.
+balanced_sampling: true   # each class has the same chance in a batch (owner decision)

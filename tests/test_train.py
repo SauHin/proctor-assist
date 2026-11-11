@@ -144,3 +144,31 @@ def test_the_other_per_frame_configs_differ_from_p1_only_in_their_variable():
         assert {k for k in p1 if p1[k] != p1s[k]} == {"name", "pretrained"} and p1s["pretrained"] is False
         assert {k for k in p1 if p1[k] != b1.get(k)} == {"name", "model", "dense_layers", "units", "pretrained"}
         assert b1["model"] == "b1" and set(b1) <= set(p1)
+
+
+def test_e1_reads_the_15_frames_of_a_window_and_trains_on_stored_features(tmp_path, monkeypatch):
+    from proctor_assist import features
+
+    feats = {1: torch.arange(200.0).repeat(128, 1).T}  # frame k has the value k in each of its 128 features
+    table = pd.DataFrame({"subject": 1, "t": range(2, 40), "target": [0, 1] * 19, "frame": 0})
+    x, target = features.SequenceDataset(table, feats)[1]  # the window that ends with second 3
+    assert x.shape == (15, 128) and x[:, 0].tolist() == list(range(5, 20)) and target == 1
+    assert models.build({"model": "e1", "hidden": 8})(torch.zeros(4, 15, 128)).shape == (4, 4)
+
+    monkeypatch.setattr(train, "frame_table", lambda subjects, train: table)
+    monkeypatch.setattr(features, "load", lambda cfg, device: feats)
+    cfg = {"model": "e1", "features": "p1", "protocol": "a", "seed": 0, "epochs": 2, "patience": 10, "batch_size": 8,
+           "lr": 0.01, "hidden": 8, "balanced_sampling": True}
+    assert train.run(cfg, tmp_path)["epochs_run"] == 2 and (tmp_path / "scores_test.csv").exists()
+
+
+def test_the_e1_configs_keep_the_training_values_of_p1():
+    import yaml
+
+    from proctor_assist.env import REPO
+
+    load = lambda name: yaml.safe_load((REPO / "configs" / f"{name}.yaml").read_text())
+    for protocol in ("a", "b"):
+        p1, e1 = load(f"p1_{protocol}"), load(f"e1_{protocol}")
+        assert {k for k in e1 if e1[k] != p1.get(k)} == {"name", "model", "features", "hidden"}
+        assert e1["features"] == "p1" and "augment" not in e1
