@@ -1061,3 +1061,50 @@ Protocol B has 441 test events in 6.58 hours of scored test video.
   2 false alarms per hour means 3 alarms or less, so the threshold is noisy (D37 named this
   cost).
 - Limits: one seed per run. The event metric counts each event once, whatever its length.
+
+## D40. Code of the tests under changed conditions (2026-11-11)
+
+These are AI choices inside D37. They are easy to change. Code: `proctor_assist.conditions`.
+
+- Values of the two levels (moderate, strong):
+
+  | Kind | Change | Moderate | Strong |
+  |---|---|---|---|
+  | Low light | factor on the brightness of each pixel | 0.5 | 0.25 |
+  | Blur | Gaussian blur, sigma in pixels of the 640 x 480 frame | 8 | 16 |
+  | Compression | JPEG quality | 15 | 7 |
+  | Lower frame rate | frames per second of the camera | 2.5 | 1 |
+
+- Rule for blur and compression: moderate is severity 3 and strong is severity 5 of the
+  benchmark ImageNet-C (Hendrycks and Dietterich, 2019). Checked in the code of the authors,
+  `ImageNet-C/create_c/make_imagenet_c.py` in the GitHub repository hendrycks/robustness: JPEG
+  quality 25, 18, 15, 10, 7, and blur sigma 1, 2, 3, 4, 6 for severities 1 to 5, on images of
+  224 x 224.
+- The resize from 640 x 480 to 224 x 224 divides the width by 2.86 and the height by 2.14.
+  Thus a sigma of 8 and 16 at 640 x 480 is about 3 and 6 at 224 x 224 (2.8 and 5.6 in width,
+  3.7 and 7.5 in height).
+- A first choice of the AI (sigma 3 and 6, JPEG quality 20 and 7) was too weak for blur: about
+  severity 1 and 2. The AI changed it before any blur or JPEG frame was extracted.
+- Low light: ImageNet-C has no darker level, so the factor is half and a quarter of the light.
+- Lower frame rate: the video has 25 fps, and the models read 5 fps (D18). Thus 2.5 and 1 fps
+  are half and a fifth of the input rate.
+- Low light has no added sensor noise. A real dark camera adds noise, so this test is milder
+  than a real dark room.
+- An image condition changes each video frame before every other step, as in a worse camera.
+  Then the frame goes to MediaPipe (E2, R0) and to the resize and the JPEG step of D18
+  (P1, B1). Thus each model gets the frame through its own normal path.
+- A lower frame rate shows each stored frame for longer: at 2.5 fps, stored frame k shows frame
+  2 x floor(k / 2), and at 1 fps, frame 5 x floor(k / 5). It needs no new extraction. P1, B1,
+  and R0 read one frame per second, so for them only the age of that frame changes.
+- Storage: per condition and subject, only the E2 input (135 values per frame), the face
+  matrix (for R0), and the scoring frame of each second (for P1 and B1). The raw points are not
+  stored, because drive D has 6.4 GB free. Folder: `data/processed/conditions/`, never committed.
+- R0 reads the face matrix of the E2 extraction. Check on subjects 1, 3, and 9 without a
+  change: the R0 scores from this matrix equal `results/r0/scores.csv` (largest difference 0.0).
+- Scores on the laptop CPU. The condition "none" scores the data without a change with the same
+  code. Check on the first 600 test rows of P1 fold 1: the CPU scores differ from the saved GPU
+  scores by at most 0.0021 in P(no cheat). `results/conditions/run.json` holds this difference
+  for all models and folds.
+- The extraction runs with 6 processes. Measured on the laptop: P1 needs about 17 ms and B1
+  about 16 ms per frame in a batch of 256 (8 threads). These are single measurements, not the
+  compute results of milestone 7.
