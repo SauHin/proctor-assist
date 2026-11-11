@@ -1,0 +1,11 @@
+name: e1_a
+model: e1
+features: p1
+hidden: 64
+protocol: a
+seed: 0
+epochs: 20
+patience: 10
+batch_size: 16
+lr: 0.0001
+balanced_sampling: true
