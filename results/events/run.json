@@ -1,0 +1,8 @@
+{
+  "time_utc": "2026-11-11T13:51:38+00:00",
+  "git_sha": "76ff925",
+  "git_dirty": false,
+  "python": "3.13.14 (tags/v3.13.14:fd17997, Jun 10 2026, 13:03:48) [MSC v.1944 64 bit (AMD64)]",
+  "tolerance_s": 2,
+  "budget_per_hour": 2.0
+}
