@@ -948,3 +948,117 @@ trainable parameters. P1 and P1s have 3493864.
   noise. Scores per second. The event metrics come at milestone 6.
 - Not in the repository: the Drive folder `b1_b_f3_20261110-203400_de3fbb1` holds only a
   config and an env file of the stopped run of D30. It stays until the owner decides.
+
+## D37. Milestone 6: event metric, threshold, and changed conditions (decided by the owner in chat, 2026-11-11)
+
+The owner chose each point from a multiple-choice question in the chat, and then accepted a
+final recap (D16). The AI wrote the options and typed this record. The answers, word for
+word (the chat was in Indonesian):
+
+1. E3: "Tunda (Recommended)". Milestones 6 to 8 come first. E3 runs only if time is left.
+2. Event: "Rangkaian detik cheat (Recommended)". One event is a run of consecutive seconds
+   with any cheat class.
+3. Tolerance: "2 s (Recommended)", at the start and at the end of an event.
+4. Threshold: "≤2 FA/jam per peserta (Recommended)". The threshold is chosen on validation
+   subjects only, for at most 2 false alarms per hour per exam taker. The full curve of
+   detected events against false alarms per hour is reported for all models.
+5. Changed conditions, levels: "2 tingkat: sedang, berat (Recommended)". 4 types (low
+   light, blur, compression, lower frame rate) at 2 levels (moderate, strong).
+6. Changed conditions, models: "P1, B1, E2, R0 (Recommended)".
+7. Changed conditions, subjects: "Protokol B, 4 fold (Recommended)". The threshold comes from
+   the validation subjects without changes.
+
+- Reasons, from the options that the owner chose:
+  - E3 is optional, and the event metric and the app are required deliverables.
+  - The app score does not separate the classes (D10), so an event ignores the class.
+  - A window of 3 s that ends up to 2 s after an event still holds frames of the event, and
+    the label times have a resolution of 1 s.
+  - With 9 tiles on the dashboard, 2 false alarms per hour per exam taker give about 18 per
+    hour for the proctor.
+- Facts behind the options (from the labels after D14, not a result file of a model): 442
+  events, median duration 6 s, and 25% of the events last 2 s or less. The gap between two
+  events is 2 s or less for 20% of the gaps, and 5 s or less for 44%. All 24 subjects have
+  about 5.1 hours with no cheat, so one validation fold of protocol B has about 1.3 hours.
+- Cost that the owner accepted: with about 1.3 hours of validation per fold, 2 false alarms
+  per hour means 2 or 3 alarms. The threshold is noisy.
+- Options that the owner did not choose: E3 now, or no E3. One label row per event, or one
+  run per class. A tolerance of 0 s or 5 s. A budget of 6 per hour, two budgets, or the
+  best event F1. 1 or 3 levels. All 6 models, or P1 and E2 only. Protocol A only.
+
+## D38. False alarm count, and the event code (2026-11-11)
+
+Why this entry exists: the first version of the event code (not committed) had a flaw. One
+alarm over the whole exam detected every event and counted as no false alarm, because it
+touched an event. Thus on folds 1, 2, and 4 of protocol B, the chosen threshold fell to about
+0, and most models "detected" 100% of the events. The AI saw this in the first results and
+stopped. These results are not kept.
+
+Decided by the owner in chat (D16), 2026-11-11, with a final recap. The answer, word for word:
+"Bagian di luar event (Recommended)".
+
+- Each part of an alarm outside all events, widened by 2 s at each end, is one false alarm.
+- An event is detected if one second of the event, widened by 2 s at each end, is an alarm
+  second.
+- Event, tolerance, budget, and the other points of D37 do not change.
+- Reason, from the option that the owner chose: no new parameter, and a long alarm costs the
+  proctor a long review in the review list of the app. An alarm over the whole exam now gives
+  48.6 false alarms per hour (all 24 subjects, R0 seconds), far above the budget.
+- Cost that the owner accepted: a correct alarm that goes on for more than 2 s after the event
+  also counts one false alarm.
+- Options that the owner did not choose: an alarm again every R seconds, or alarm parts of N
+  seconds.
+
+AI choices in `proctor_assist.events`, easy to change:
+- An alarm second is a scored second with a suspicion at or above the threshold. There is no
+  smoothing. A masked second (D14) ends an event and an alarm.
+- False alarms per hour = false alarms / all scored seconds of the part, in hours. This is the
+  load per exam taker.
+- Threshold candidates: 1001 quantiles of the validation suspicion, plus infinity (no alarm).
+  The choice is the most detected events at no more than 2 false alarms per hour on
+  validation. Ties go to the higher threshold.
+- The delay of a detected event: its first alarm second inside the widened event, minus the
+  event start. It can be negative, down to -2 s.
+- R0 gets a threshold per fold from the validation subjects of that fold, on the same seconds
+  as the trained models.
+- Protocol A is also evaluated, with its 3 validation subjects.
+- `results/events/curves.csv` holds the curve of each run on validation and test, without the
+  points that repeat the previous point.
+
+## D39. Finding: at 2 false alarms per hour, the models detect few events (2026-11-11)
+
+This entry is a result, not a choice. All numbers come from `results/events/summary.csv`,
+`results/events/protocol_b.csv`, and `results/events/curves.csv`. They were computed on the
+laptop CPU from the saved scores of the runs in D33, D35, and D36, and from `results/r0/`.
+Protocol B has 441 test events in 6.58 hours of scored test video.
+
+- Protocol B, threshold from validation (mean over 4 folds, std in brackets):
+
+  | Model | Test events detected | Test false alarms per hour | Real exam takers: detected / false alarms per hour | Actors: detected / false alarms per hour |
+  |---|---|---|---|---|
+  | R0 | 0.000 (0.000) | 0.00 (0.00) | 0.000 / 0.00 | 0.000 / 0.00 |
+  | B1 | 0.198 (0.144) | 18.08 (13.91) | 0.162 / 6.96 | 0.243 / 27.02 |
+  | P1 | 0.099 (0.049) | 4.85 (5.11) | 0.127 / 7.68 | 0.096 / 3.79 |
+  | P1s | 0.074 (0.081) | 23.42 (31.55) | 0.082 / 9.39 | 0.054 / 29.29 |
+  | E1 | 0.151 (0.121) | 4.45 (2.48) | 0.182 / 6.72 | 0.133 / 3.78 |
+  | E2 | 0.016 (0.020) | 1.12 (1.36) | 0.017 / 1.92 | 0.014 / 0.52 |
+
+- The threshold does not transfer well from validation to test. Validation allows at most 2
+  false alarms per hour, but the test mean is above 2 for B1, P1, P1s, and E1. P1s on fold 3
+  has 66.7 per hour on test.
+- R0 gets the threshold "no alarm" in every fold. Its score is 1 for 0.7% of the seconds
+  (a head turn of 30 degrees or more, D25). These seconds alone give more than 2 false alarms
+  per hour on validation.
+- E2 gets the threshold "no alarm" on fold 4, and detects no test event on folds 3 and 4.
+- View with no threshold, from the test curves. This is for comparison only, not a threshold
+  choice. The value is the largest share of events detected, mean over the 4 folds:
+
+  | Limit on test false alarms per hour | E1 | P1 | R0 | E2 | P1s | B1 |
+  |---|---|---|---|---|---|---|
+  | 2 | 0.089 | 0.081 | 0.000 | 0.015 | 0.041 | 0.017 |
+  | 10 | 0.270 | 0.223 | 0.163 | 0.140 | 0.093 | 0.068 |
+- Reading: at the budget of D37, no model detects more than about a fifth of the events, and
+  E1 and P1 give the best balance. With about 1.6 hours of scored validation video per fold,
+  2 false alarms per hour means 3 alarms or less, so the threshold is noisy (D37 named this
+  cost).
+- Limits: one seed per run. The event metric counts each event once, whatever its length.
+- `results/events/run.json` says `git_dirty: true`, because the code was not committed yet.
