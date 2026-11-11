@@ -130,6 +130,7 @@ def run_folders():
 
 
 def main():
+    info = env_info()  # before the outputs are written, so they do not make the tree dirty
     rows, curves = [], []
     for model, protocol, fold, name, val, test in run_folders():
         val, test = (s.assign(suspicion=1 - s.p0) for s in (val, test))
@@ -151,7 +152,6 @@ def main():
     pd.concat({"mean": b.mean(), "std": b.std()}, axis=1).to_csv(
         OUT / "protocol_b.csv", float_format="%.4f", lineterminator="\n"
     )
-    info = env_info()
     run = {k: info[k] for k in ("time_utc", "git_sha", "git_dirty", "python")} | {"tolerance_s": TOLERANCE, "budget_per_hour": BUDGET}
     (OUT / "run.json").write_text(json.dumps(run, indent=2) + "\n", newline="\n")
     print(f"Wrote summary.csv, curves.csv, and protocol_b.csv to {OUT}")

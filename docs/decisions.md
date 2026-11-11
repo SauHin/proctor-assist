@@ -1061,4 +1061,3 @@ Protocol B has 441 test events in 6.58 hours of scored test video.
   2 false alarms per hour means 3 alarms or less, so the threshold is noisy (D37 named this
   cost).
 - Limits: one seed per run. The event metric counts each event once, whatever its length.
-- `results/events/run.json` says `git_dirty: true`, because the code was not committed yet.
