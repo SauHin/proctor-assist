@@ -1,0 +1,94 @@
+{
+  "model": "b1",
+  "device": "cuda",
+  "parameters": 390404,
+  "epochs_run": 15,
+  "best_epoch": 5,
+  "train_seconds": 1668.0011954307556,
+  "train_frames_per_class": {
+    "0": 48025,
+    "1": 5430,
+    "2": 7960,
+    "3": 200
+  },
+  "val": {
+    "rows": 5236,
+    "macro_f1": 0.3862658762392279,
+    "f1_per_class": {
+      "no cheat": 0.9028882833787466,
+      "looks at an object": 0.07278020378457059,
+      "talks to a person": 0.5693950177935944,
+      "phone call": 0.0
+    },
+    "accuracy": 0.8263941940412529,
+    "confusion_matrix_rows_true_cols_pred": [
+      [
+        4142,
+        186,
+        61,
+        0
+      ],
+      [
+        433,
+        25,
+        7,
+        0
+      ],
+      [
+        164,
+        10,
+        160,
+        0
+      ],
+      [
+        47,
+        1,
+        0,
+        0
+      ]
+    ],
+    "roc_auc_cheat": 0.6862176639408977,
+    "baseline_macro_f1": 0.228,
+    "baseline_accuracy": 0.8382352941176471
+  },
+  "test": {
+    "rows": 6148,
+    "macro_f1": 0.36320791917911954,
+    "f1_per_class": {
+      "no cheat": 0.7312971435637443,
+      "looks at an object": 0.23347547974413646,
+      "talks to a person": 0.48805905340859745,
+      "phone call": 0.0
+    },
+    "accuracy": 0.6080026024723487,
+    "confusion_matrix_rows_true_cols_pred": [
+      [
+        2957,
+        1135,
+        325,
+        5
+      ],
+      [
+        69,
+        219,
+        24,
+        0
+      ],
+      [
+        617,
+        210,
+        562,
+        3
+      ],
+      [
+        22,
+        0,
+        0,
+        0
+      ]
+    ],
+    "roc_auc_cheat": 0.6693962899083011,
+    "baseline_macro_f1": 0.20917691579943234,
+    "baseline_accuracy": 0.7192582953806116
+  }
+}

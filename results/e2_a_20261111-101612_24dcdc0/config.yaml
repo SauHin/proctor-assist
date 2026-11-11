@@ -1,0 +1,12 @@
+name: e2_a
+model: e2
+features: landmarks
+feature_size: 135
+hidden: 64
+protocol: a
+seed: 0
+epochs: 20
+patience: 10
+batch_size: 16
+lr: 0.0001
+balanced_sampling: true
