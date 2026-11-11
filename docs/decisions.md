@@ -730,3 +730,25 @@ final recap (D16). The AI wrote the options and typed this record.
   config values that it knows.
 - Open for round 2: the design of E2 (landmarks), after a measurement of the MediaPipe speed
   for hands and body.
+
+## D30. E1 code, and the state of the B1 and P1s runs (2026-11-11)
+
+- State of the queue of D29: 3 of the 10 runs finished in the night of 2026-11-10: `b1_a`,
+  `b1_b` fold 1, and `b1_b` fold 2. Their files are in `results/b1_*`. The run of fold 3
+  started and wrote no epoch. The log shows no error. The cause is not known. A stopped
+  Colab runtime is likely.
+- Open: `b1_b` folds 3 and 4, and the 5 runs of P1s. The B1 results get their entry when all
+  5 runs are in the repository. Until then, the B1 values for protocol B are TBD.
+- Decision (owner, in chat): the AI writes the E1 code first. The rest of the queue runs
+  later, when the owner can keep the Colab tab open.
+- E1 code (AI choices inside D29, easy to change):
+  - `proctor_assist.features` computes the features of all stored frames with the P1 model
+    of the same protocol and fold. It stores them one time per P1 run.
+  - The training script finds the P1 run folder by its name. It stops if it finds no run or
+    more than one run.
+  - A window has the 15 frames of 3 s (D18). Training and scoring use one window per second.
+  - The configs of E1 keep the training values of P1, and a test checks this.
+- Not done: E1 has not run on real features yet. The tests use made-up features. The script
+  that scores the training subjects (D23) does not work for E1.
+- Lesson for long Colab jobs: a job at night with no person at the laptop stopped one time.
+  The guard on the laptop saw it and shut the laptop down, as the owner asked.
