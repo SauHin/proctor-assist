@@ -58,7 +58,7 @@ class E1(nn.Module):
         return self.out(self.gru(x)[1][-1])  # the state after the last frame
 
 
-MODELS = {"p1": P1, "b1": B1, "e1": E1}
+MODELS = {"p1": P1, "b1": B1, "e1": E1, "e2": E1}  # E2 is the GRU of E1 on landmark features (D32)
 
 
 def build(cfg, **override):

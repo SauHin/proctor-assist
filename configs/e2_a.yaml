@@ -1,0 +1,17 @@
+# E2: landmark features and a GRU over a window, protocol A (docs/decisions.md D32).
+name: e2_a
+model: e2            # the GRU of E1 over the landmark features of a 3 s window (D32)
+features: landmarks  # face, hand, and body points, normalized to the shoulders (owner decision, D32)
+feature_size: 135    # values per frame, landmarks.N_FEATURES
+hidden: 64           # units of the GRU layer
+protocol: a          # train on actors, test on the real exam takers and one actor (D15)
+seed: 0
+
+# From the reference paper (Educ. Sci. 2023, section 3.4 and Table 1).
+epochs: 20           # maximum number of epochs
+patience: 10         # early stopping
+batch_size: 16       # best value in Table 2 of the paper
+lr: 0.0001           # Adam
+
+# The same choice as for P1 (D21). E2 has no augmentation, as E1.
+balanced_sampling: true   # each class has the same chance in a batch (owner decision)

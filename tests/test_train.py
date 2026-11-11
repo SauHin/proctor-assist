@@ -172,3 +172,58 @@ def test_the_e1_configs_keep_the_training_values_of_p1():
         p1, e1 = load(f"p1_{protocol}"), load(f"e1_{protocol}")
         assert {k for k in e1 if e1[k] != p1.get(k)} == {"name", "model", "features", "hidden"}
         assert e1["features"] == "p1" and "augment" not in e1
+
+
+def _rotation(yaw, pitch):
+    import math
+
+    y, p = math.radians(yaw), math.radians(pitch)
+    turn = np.array([[math.cos(y), 0, math.sin(y)], [0, 1, 0], [-math.sin(y), 0, math.cos(y)]])
+    nod = np.array([[1, 0, 0], [0, math.cos(p), -math.sin(p)], [0, math.sin(p), math.cos(p)]])
+    return turn @ nod
+
+
+def test_landmark_features_are_normalized_to_the_shoulders_and_give_zeros_for_missing_parts(tmp_path, monkeypatch):
+    from proctor_assist import features, landmarks
+
+    nan = np.nan
+    raw = {
+        "face": np.full((2, 478, 3), nan),
+        "face_matrix": np.full((2, 4, 4), nan),
+        "pose": np.full((2, 33, 4), nan),
+        "hands": np.full((2, 2, 21, 3), nan),
+    }
+    raw["face_matrix"][0] = np.eye(4)
+    raw["face_matrix"][0, :3, :3] = _rotation(45, -9)
+    raw["pose"][0, 11, :2] = [200 / 640, 300 / 480]  # shoulders at 200 and 400 px: the middle is at 300 px,
+    raw["pose"][0, 12, :2] = [400 / 640, 300 / 480]  # and the width is 200 px
+    raw["face"][0, :, :2] = [300 / 640, 100 / 480]  # each face point is 200 px above the middle of the shoulders
+    raw["hands"][0, 0, :, :2] = [500 / 640, 300 / 480]  # the first hand is 200 px to the right
+    x = landmarks.frame_features(raw)
+    assert x.shape == (2, landmarks.N_FEATURES) and x.dtype == np.float32
+    assert x[0, :3] == pytest.approx([0.5, -0.1, 0], abs=1e-6)  # yaw 45 and pitch -9 degrees, divided by 90
+    face = x[0, 3 : 3 + 2 * len(landmarks.FACE_POINTS)].reshape(-1, 2)
+    assert face == pytest.approx(np.tile([0, -1], (len(landmarks.FACE_POINTS), 1)))
+    start = 3 + 2 * len(landmarks.FACE_POINTS) + 2 * len(landmarks.POSE_POINTS)
+    assert x[0, start : start + 2] == pytest.approx([1, 0])
+    assert x[0, start + 42 : start + 84].tolist() == [0] * 42  # no second hand
+    assert x[0, -4:].tolist() == [1, 1, 1, 0] and x[1].tolist() == [0] * landmarks.N_FEATURES
+
+    monkeypatch.setattr(landmarks, "OUT", tmp_path)
+    for s in range(1, 25):
+        np.savez(tmp_path / f"subject{s}.npz", **raw)
+    loaded = features.load({"features": "landmarks"}, "cpu")
+    assert loaded[24].shape == (2, landmarks.N_FEATURES) and loaded[24].dtype == torch.float32
+
+
+def test_the_e2_configs_equal_the_e1_configs_except_the_input():
+    import yaml
+
+    from proctor_assist import landmarks
+    from proctor_assist.env import REPO
+
+    load = lambda name: yaml.safe_load((REPO / "configs" / f"{name}.yaml").read_text())
+    for protocol in ("a", "b"):
+        e1, e2 = load(f"e1_{protocol}"), load(f"e2_{protocol}")
+        assert {k for k in e2 if e2[k] != e1.get(k)} == {"name", "model", "features", "feature_size"}
+        assert e2["features"] == "landmarks" and e2["feature_size"] == landmarks.N_FEATURES

@@ -9,7 +9,7 @@ import torch
 import yaml
 from torch.utils.data import DataLoader, Dataset
 
-from proctor_assist import frames
+from proctor_assist import frames, landmarks
 from proctor_assist.data import FrameDataset, transform
 from proctor_assist.env import FAST_DATA, ROOT
 from proctor_assist.labels import SUBJECTS
@@ -30,6 +30,8 @@ def p1_run(cfg):
 @torch.no_grad()
 def load(cfg, device):
     """Return {subject: features of all its stored frames}. Compute and store the missing files."""
+    if cfg["features"] == "landmarks":  # E2: the landmark files come from proctor_assist.landmarks (D32)
+        return {s: torch.from_numpy(landmarks.frame_features(np.load(landmarks.OUT / f"subject{s}.npz"))) for s in SUBJECTS}
     run = p1_run(cfg)
     out = FAST_DATA / "processed" / "features" / run.name
     out.mkdir(parents=True, exist_ok=True)
