@@ -829,3 +829,47 @@ runs used the code at `0c9b579` on a GPU NVIDIA L4. E1 has 37508 trainable param
   This is a result for this design of E1, not for temporal context in general.
 - Feature time: about 2 minutes per P1 run on the L4. One E1 epoch took about 1.5 s.
 - Limits: one seed per run. Scores per second. The event metrics come at milestone 6.
+
+## D34. E2 code (2026-11-11)
+
+These are AI choices inside D32. They are easy to change.
+
+- `python -m proctor_assist.landmarks` reads every 5th frame of each video, so row k belongs
+  to stored frame k (D18). It runs on the laptop, with 4 processes.
+- Storage: `data/processed/landmarks/subjectN.npz`, never committed. It holds all raw points
+  as float16: 478 face points, the face matrix, 33 body points with their visibility, and
+  21 points for each of two hands. A part that is not found is NaN. The two hands are
+  sorted from left to right in the image. Subject 1 needed 15 MB.
+- Input per frame (`landmarks.frame_features`, 135 values):
+  - Head yaw, pitch, and roll, divided by 90 degrees.
+  - 13 face points: nose tip, eye corners and lids, inner lips, and mouth corners.
+  - 9 body points: nose, ears, shoulders, elbows, and wrists.
+  - The 21 points of each hand.
+  - All points in pixels, minus the middle of the shoulders, divided by the shoulder width.
+  - One flag each for face, body, first hand, and second hand.
+  - A part that is not found gives zeros. Without a body, all points are zeros.
+  - The z values of MediaPipe are not used.
+- E2 uses the GRU class of E1 with 135 inputs (`models.MODELS["e2"]`). The configs of E2 equal
+  those of E1 except the input, and a test checks this. E2 trains on the laptop CPU.
+- Check of the point numbers on the 3648 frames of subject 1 with a face: the eyes are above
+  the nose tip in 100.0% of the frames, and the nose tip is above the inner lips in 100.0%.
+  The upper lid is above the lower lid in 99.6% and 98.1%. The two eyes and the two mouth
+  corners are on different sides of the nose in 99.9% and 99.1%. The upper inner lip is at
+  or above the lower inner lip in 65.7%, because the two lips touch when the mouth is
+  closed. The body nose is above the shoulders in 93.7% of the frames.
+- Speed on the laptop: subject 1 (4321 frames) took 6 min 44 s in one process.
+- Full run on 2026-11-11: all 24 subjects in about 44 minutes with 4 processes, 414 MB in
+  total. The run used the code of commit `24d076d` before it was committed, so
+  `results/landmarks/run.json` says `git_dirty: true`. The frame count of each subject equals `results/frames/summary.csv`. Mean detection
+  rates (`results/landmarks/summary.csv`):
+
+  | Group | Face | Body | First hand | Second hand |
+  |---|---|---|---|---|
+  | Actors | 91.8% | 99.3% | 8.9% | 0.1% |
+  | Real exam takers | 80.1% | 94.3% | 20.9% | 0.7% |
+
+- A second hand is almost never found. The hand points are mostly zeros.
+- E2 on the laptop CPU: one pass over the 9208 training windows of protocol A took 3.7 s.
+  Thus E2 trains on the laptop, as D32 allows.
+- No fitted statistic: the normalization uses the shoulders of the same frame. Thus there
+  is no risk of test data in a statistic.
