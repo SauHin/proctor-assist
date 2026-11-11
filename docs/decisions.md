@@ -752,3 +752,80 @@ final recap (D16). The AI wrote the options and typed this record.
   that scores the training subjects (D23) does not work for E1.
 - Lesson for long Colab jobs: a job at night with no person at the laptop stopped one time.
   The guard on the laptop saw it and shut the laptop down, as the owner asked.
+
+## D31. Order of milestone 5: E1 and E2 before the rest of B1 and P1s (decided by the owner in chat, 2026-11-11)
+
+The owner chose each point from a multiple-choice question in the chat (D16). The proposal
+came from a second AI session that the owner started.
+
+- Order: E1 first, then the design and the landmark extraction of E2, then the open runs of
+  B1 and P1s.
+- P1s keeps its 5 runs (D29). They run last. The owner can review this if time or compute
+  units run low.
+- Reason, from the option that the owner chose: E1 and E2 are the experiments that can
+  change the conclusion. E2 goes at the cause in D23, because landmarks do not carry the
+  look of a person. B1 and P1s are controls for research question 2.
+- Fact behind the proposal (`results/*/metrics.json`): the test ROC-AUC of B1 on folds 1 and
+  2 of protocol B is 0.608 and 0.681. P1 has 0.642 and 0.656 on the same folds.
+- Options that the owner did not choose: finish B1 and P1s first. P1s on protocol B only. No
+  P1s.
+- The design of the experiments does not change.
+
+## D32. E2 design (decided by the owner in chat, 2026-11-11)
+
+The owner chose each point from a multiple-choice question in the chat, and then accepted a
+final recap (D16). The AI wrote the options and typed this record.
+
+- Landmarks: face, hands, and body, from MediaPipe, on the original video, at 5 fps.
+- Model input: selected points, normalized to the body of the subject. The origin is the
+  middle of the shoulders, and the scale is the shoulder width.
+- The extraction stores all raw points. Thus the input can change with no new extraction.
+- Reasons, from the options that the owner chose: hands and body show a phone at the ear
+  and a turn of the body, which the face alone does not show. A small input that does not
+  depend on the seat position is hard to learn by heart for each person.
+- Options that the owner did not choose: face and body only, or face only. All raw points,
+  or hand-made features only.
+- AI choices, easy to change (D10):
+  - Input per frame: head yaw, pitch, and roll. Eye and mouth points of the face. The upper
+    body points. The points of each hand. One flag per part that says if it was found.
+  - A part that is not found gives zeros.
+  - Window of 3 s, GRU with 64 units, and the training values of P1, as for E1.
+  - E2 trains on the laptop CPU if it is fast enough. TBD until measured.
+- Model files in `data/models/mediapipe/` (not committed), from the MediaPipe model storage
+  of Google:
+  - `hand_landmarker.task`, 7819105 bytes, SHA-256
+    `fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1`.
+  - `pose_landmarker_full.task`, 9398198 bytes, SHA-256
+    `5134a3aad27a58b93da0088d431f366da362b44e3ccfbe3462b3827a839011b1`.
+- First measurement on the laptop (2 subjects, 3000 frames, not a result file): about 82 ms
+  per frame for the three models together. The extraction of all frames then needs about
+  3 hours.
+- Not done yet: the extraction code, the E2 model, and the tests.
+
+## D33. Finding: E1 is not better than P1 (2026-11-11)
+
+This entry is a result, not a choice. All numbers come from the 5 run folders
+`results/e1_*`, `results/e1_b_summary.csv`, and `results/e1_b_test_per_subject.csv`. The
+runs used the code at `0c9b579` on a GPU NVIDIA L4. E1 has 37508 trainable parameters.
+
+  | Run | E1 test ROC-AUC | P1 test ROC-AUC | E1 test macro F1 | P1 test macro F1 | E1 best epoch |
+  |---|---|---|---|---|---|
+  | Protocol A | 0.644 | 0.631 | 0.422 | 0.423 | 1 |
+  | Protocol B fold 1 | 0.622 | 0.642 | 0.279 | 0.294 | 1 |
+  | Protocol B fold 2 | 0.642 | 0.657 | 0.369 | 0.357 | 1 |
+  | Protocol B fold 3 | 0.621 | 0.622 | 0.326 | 0.322 | 1 |
+  | Protocol B fold 4 | 0.878 | 0.855 | 0.587 | 0.639 | 1 |
+  | Protocol B mean (std) | 0.691 (0.125) | 0.694 (0.108) | 0.390 | 0.403 | |
+
+- Per subject on protocol B, mean ROC-AUC: real exam takers 0.816 for E1 and
+  0.803 for P1. Actors 0.658 for E1 and 0.665 for P1. E1 is better than
+  P1 for 8 of the 9 real exam takers and for 9 of the 15 actors.
+- Each E1 run kept the model of epoch 1. The validation loss rose after the first epoch.
+- Reading: the GRU gets the frozen features of the P1 run of the same split. P1 learned its
+  training subjects (D23), so the features of those subjects already separate the classes.
+  The GRU learns them in one epoch and adds no transfer to new people. D29 named this cost
+  before the runs.
+- Reading for research question 3: with these features, a window of 3 s does not help.
+  This is a result for this design of E1, not for temporal context in general.
+- Feature time: about 2 minutes per P1 run on the L4. One E1 epoch took about 1.5 s.
+- Limits: one seed per run. Scores per second. The event metrics come at milestone 6.
