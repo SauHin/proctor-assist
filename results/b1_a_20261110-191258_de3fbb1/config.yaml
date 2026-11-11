@@ -1,0 +1,14 @@
+name: b1_a
+model: b1
+protocol: a
+seed: 0
+epochs: 20
+patience: 10
+batch_size: 16
+lr: 0.0001
+balanced_sampling: true
+augment:
+  degrees: 15
+  translate: 0.1
+  scale: 0.1
+  hflip: true
