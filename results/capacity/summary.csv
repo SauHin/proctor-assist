@@ -1,0 +1,6 @@
+model,max_real_time_streams,parameters,train_seconds,train_device,latency_p50_ms_1_stream,latency_p95_ms_1_stream,latency_p95_ms_at_max,peak_mb_max_worker_at_max,decode_ms_per_video_s,mediapipe_ms_per_video_s,window_ms_per_video_s,prepare_ms_per_video_s,model_ms_per_video_s
+r0,110,0,0.0000,none,11.5338,13.9974,78.0145,616.5234,5.6976,9.4008,1.9012,,
+b1,75,390404,1310.3694,"NVIDIA L4, 23034 MiB",31.9514,35.7849,184.7576,541.3984,5.6542,,,3.2914,30.6537
+p1,65,3493864,1426.2779,"NVIDIA L4, 23034 MiB",20.4308,25.5747,243.4541,565.4258,4.5699,,,2.8578,18.4552
+e1,20,3531372,16.2314,"NVIDIA L4, 23034 MiB",35.5447,48.6711,165.0006,491.9805,11.6879,,1.2161,27.1317,151.5484
+e2,15,38852,74.3580,"NVIDIA GeForce RTX 3050 6GB Laptop GPU, 6144 MiB",76.8550,89.9776,205.3341,619.0000,10.2002,371.1696,1.0152,2.1163,

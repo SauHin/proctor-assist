@@ -1,0 +1,19 @@
+model,class,events,detected,detected_share
+r0,looks at an object,156,0,0.0000
+r0,talks to a person,270,0,0.0000
+r0,phone call,15,0,0.0000
+b1,looks at an object,156,43,0.2756
+b1,talks to a person,270,53,0.1963
+b1,phone call,15,3,0.2000
+p1,looks at an object,156,18,0.1154
+p1,talks to a person,270,29,0.1074
+p1,phone call,15,0,0.0000
+p1s,looks at an object,156,14,0.0897
+p1s,talks to a person,270,24,0.0889
+p1s,phone call,15,0,0.0000
+e1,looks at an object,156,24,0.1538
+e1,talks to a person,270,51,0.1889
+e1,phone call,15,0,0.0000
+e2,looks at an object,156,1,0.0064
+e2,talks to a person,270,5,0.0185
+e2,phone call,15,0,0.0000

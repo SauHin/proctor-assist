@@ -1,0 +1,81 @@
+model,true,predicted,seconds
+b1,no cheat,no cheat,12062
+b1,no cheat,looks at an object,3370
+b1,no cheat,talks to a person,1744
+b1,no cheat,phone call,1220
+b1,looks at an object,no cheat,824
+b1,looks at an object,looks at an object,582
+b1,looks at an object,talks to a person,305
+b1,looks at an object,phone call,152
+b1,talks to a person,no cheat,1235
+b1,talks to a person,looks at an object,282
+b1,talks to a person,talks to a person,1773
+b1,talks to a person,phone call,24
+b1,phone call,no cheat,93
+b1,phone call,looks at an object,8
+b1,phone call,talks to a person,9
+b1,phone call,phone call,0
+p1,no cheat,no cheat,14986
+p1,no cheat,looks at an object,684
+p1,no cheat,talks to a person,2634
+p1,no cheat,phone call,92
+p1,looks at an object,no cheat,1132
+p1,looks at an object,looks at an object,486
+p1,looks at an object,talks to a person,244
+p1,looks at an object,phone call,1
+p1,talks to a person,no cheat,1555
+p1,talks to a person,looks at an object,95
+p1,talks to a person,talks to a person,1661
+p1,talks to a person,phone call,3
+p1,phone call,no cheat,55
+p1,phone call,looks at an object,5
+p1,phone call,talks to a person,43
+p1,phone call,phone call,7
+p1s,no cheat,no cheat,9927
+p1s,no cheat,looks at an object,2235
+p1s,no cheat,talks to a person,4505
+p1s,no cheat,phone call,1729
+p1s,looks at an object,no cheat,693
+p1s,looks at an object,looks at an object,817
+p1s,looks at an object,talks to a person,298
+p1s,looks at an object,phone call,55
+p1s,talks to a person,no cheat,1108
+p1s,talks to a person,looks at an object,332
+p1s,talks to a person,talks to a person,1766
+p1s,talks to a person,phone call,108
+p1s,phone call,no cheat,38
+p1s,phone call,looks at an object,19
+p1s,phone call,talks to a person,53
+p1s,phone call,phone call,0
+e1,no cheat,no cheat,15287
+e1,no cheat,looks at an object,449
+e1,no cheat,talks to a person,2610
+e1,no cheat,phone call,50
+e1,looks at an object,no cheat,1226
+e1,looks at an object,looks at an object,405
+e1,looks at an object,talks to a person,232
+e1,looks at an object,phone call,0
+e1,talks to a person,no cheat,1483
+e1,talks to a person,looks at an object,70
+e1,talks to a person,talks to a person,1757
+e1,talks to a person,phone call,4
+e1,phone call,no cheat,61
+e1,phone call,looks at an object,4
+e1,phone call,talks to a person,42
+e1,phone call,phone call,3
+e2,no cheat,no cheat,10873
+e2,no cheat,looks at an object,3911
+e2,no cheat,talks to a person,3289
+e2,no cheat,phone call,323
+e2,looks at an object,no cheat,738
+e2,looks at an object,looks at an object,981
+e2,looks at an object,talks to a person,129
+e2,looks at an object,phone call,15
+e2,talks to a person,no cheat,1441
+e2,talks to a person,looks at an object,701
+e2,talks to a person,talks to a person,1090
+e2,talks to a person,phone call,82
+e2,phone call,no cheat,8
+e2,phone call,looks at an object,1
+e2,phone call,talks to a person,26
+e2,phone call,phone call,75

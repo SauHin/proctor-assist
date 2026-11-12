@@ -1211,3 +1211,123 @@ word (the chat was in Indonesian):
   frames are not committed.
 - Options that the owner did not choose: the cost of one stream divided into 1 s. A choice
   with an extra rule on the changed conditions, or a choice on the test numbers of protocol B.
+
+## D43. Finding: the models find long events and miss phone calls, and one exam taker gives many false alarms (2026-11-12)
+
+This entry is a result, not a choice. All numbers come from `results/analysis/` (git e2f2144,
+see `results/analysis/run.json`). The code is `proctor_assist.analysis`. It uses the saved
+test scores of the 4 folds of protocol B, at the thresholds from validation of D39. Every
+subject is a test subject in exactly one fold, so the tables pool the 24 subjects: 441 events.
+Pooled shares differ a little from the fold means of D39. The pooled share of events detected
+is 0.224 for B1, 0.170 for E1, 0.107 for P1, 0.086 for P1s, 0.014 for E2, and 0 for R0.
+
+- Events detected per class of D14 (the class with the most seconds in the event):
+
+  | Class | Events | B1 | E1 | P1 | P1s | E2 |
+  |---|---|---|---|---|---|---|
+  | looks at an object | 156 | 0.276 | 0.154 | 0.115 | 0.090 | 0.006 |
+  | talks to a person | 270 | 0.196 | 0.189 | 0.107 | 0.089 | 0.018 |
+  | phone call | 15 | 0.200 | 0.000 | 0.000 | 0.000 | 0.000 |
+
+- Per OEP code (an event counts for each code in it): code 1 has 150 events, code 2 has 280,
+  code 3 has 7, code 5 has 15, and code 6 has 19. Only B1 detects an event with code 5 (3 of
+  15). `results/analysis/by_code.csv` has all values.
+- Events detected by event length (seconds):
+
+  | Length | Events | B1 | E1 | P1 | P1s | E2 |
+  |---|---|---|---|---|---|---|
+  | 1-2 | 108 | 0.130 | 0.065 | 0.037 | 0.018 | 0.000 |
+  | 3-5 | 103 | 0.223 | 0.029 | 0.019 | 0.058 | 0.019 |
+  | 6-10 | 78 | 0.231 | 0.128 | 0.103 | 0.077 | 0.013 |
+  | 11-30 | 113 | 0.248 | 0.319 | 0.186 | 0.142 | 0.026 |
+  | over 30 | 39 | 0.410 | 0.487 | 0.308 | 0.205 | 0.000 |
+
+- Actors (245 events) against real exam takers (196 events), as detected share / false alarms
+  per hour:
+
+  | Group | B1 | E1 | P1 | P1s | E2 |
+  |---|---|---|---|---|---|
+  | actors | 0.245 / 26.72 | 0.131 / 3.66 | 0.094 / 3.94 | 0.061 / 33.19 | 0.012 / 0.56 |
+  | real exam takers | 0.199 / 9.59 | 0.219 / 5.29 | 0.122 / 5.29 | 0.117 / 13.23 | 0.015 / 1.65 |
+
+- Confusion per second (largest probability, P1): 60.8% of the "looks at an object" seconds
+  and 46.9% of the "talks to a person" seconds get "no cheat". Of the 110 "phone call" seconds,
+  7 get "phone call", 43 get "talks to a person", and 55 get "no cheat". 14.3% of the "no
+  cheat" seconds get "talks to a person". E1 has the same pattern (`confusion.csv`).
+- The median delay from the event start to the first alarm is 2 s for P1 and for E1.
+- Share of stored frames with a face (MediaPipe), mean over the 24 subjects: 0.874 with no
+  change, 0.279 at moderate blur, 0.001 at strong blur, 0.836 at strong low light, and 0.750
+  at strong JPEG. This explains the result of R0 and E2 under blur in D41.
+- False alarms: P1 has 30 on test, and 13 of them come from subject 11 (a real exam taker,
+  44.49 per hour). E1 has 29, with 9 from subject 1 and 8 from subject 11.
+- Frames of the 20 false alarms with the highest peak of P1 and of E1 (rows of
+  `false_alarms.csv`, the stored frame of the peak second). These descriptions come from the AI,
+  and the owner checks them (D42):
+  - Subject 11 gives 8 of the 20 for each model. The person sits low, at the lower right edge of
+    the frame, with the head bent forward. Most of the face is out of the frame.
+  - Most of the others look down at the desk (subjects 6, 16, and 21) or sit in front of the
+    camera with the head a little down (subject 1).
+  - P1, subject 9, second 445: the chair is empty, and no person is in the frame.
+  - E1, subject 21, second 912: a second person is close to the camera, next to the exam taker.
+    This second is not in a cheat label, within the 2 s of tolerance. This is an observation,
+    not a label change. Labels are owner decisions (CLAUDE.md).
+- Reading:
+  - Short events are the most common (211 of the 441 last 5 s or less), and the models miss
+    most of them. Long events are found more often.
+  - Phone calls are rare (15 events), and the models take them for talk or for no cheat.
+  - P1 and E1 detect more events of the real exam takers than of the actors, so the transfer to
+    real exam takers is not the main problem on protocol B.
+  - Many false alarms come from a camera position that hides the face, or from a person who
+    looks down at the desk. Together with D41, this means that the models need a clear view of
+    the face and the upper body.
+- Limits: one seed per run. The frame review covers one frame per false alarm, and the
+  descriptions are not checked yet.
+
+## D44. Finding: all models run in real time on the laptop, so the app uses E1 (2026-11-13)
+
+The capacity numbers are a result. The choice of E1 follows the rule of D42, which the owner
+decided. All numbers come from `results/capacity/` (git e2f2144, see
+`results/capacity/run.json`). The code is `proctor_assist.capacity`. Laptop: AMD Ryzen 7 8845HS
+(8 cores, 16 logical cores), on the charger at the start and at the end. 16 processes with 1
+torch thread each, 60 s of video per stream, and the protocol A copies of the models (D42).
+
+- Largest number of streams in real time, and the cost of one stream alone:
+
+  | Model | Streams in real time | Parameters | Training time (s) | Latency of one stream, median / 95th percentile (ms) | CPU time per video second, one stream (ms) |
+  |---|---|---|---|---|---|
+  | R0 | 110 | 0 | 0 | 11.5 / 14.0 | 17.0 |
+  | B1 | 75 | 390,404 | 1310 | 32.0 / 35.8 | 39.6 |
+  | P1 | 65 | 3,493,864 | 1426 | 20.4 / 25.6 | 25.9 |
+  | E1 | 20 | 3,531,372 | 16 + P1 | 35.5 / 48.7 | 191.6 |
+  | E2 | 15 | 38,852 | 74 | 76.9 / 90.0 | 384.5 |
+
+- Notes on the table:
+  - Latency is the time from the decoded last frame of a second to its score.
+  - CPU time per video second is the sum of the stages in `summary.csv`: decoding, MediaPipe,
+    the image step, the model, and the window step.
+  - The parameters of E1 include its P1 backbone, which runs at scoring time. The training time
+    of E1 covers the GRU only, because the backbone comes from P1 (D29).
+  - B1, P1, and E1 trained on an NVIDIA L4, and E2 on the laptop GPU (RTX 3050 6 GB).
+    Training times on different GPUs are not directly comparable.
+- Why the costs differ:
+  - P1, B1, and R0 score one frame per second.
+  - E1 runs the P1 backbone on all 5 stored frames of each second.
+  - E2 runs 3 MediaPipe models on 5 frames per second, which costs 371 ms per video second.
+- With many streams, the processes compete for the CPU. Video decoding of one stream costs
+  5.7 ms per video second for R0 alone, and 85.6 ms at 110 streams.
+- The sum of the peak memory of the 16 processes is 7.6 to 9.7 GB at the largest real-time
+  number. This sum counts shared memory more than one time, so it is an upper limit.
+- The border between real time and not real time is noisy, by about 5%. Example: B1 passed
+  with 72, 74, and 75 streams but failed with 76.
+- Deployment model (rule of D42): all 5 models run in real time on the laptop. The app needs
+  10 streams: 9 tiles and 1 webcam tile. On the validation subjects of protocol B, E1 detects
+  the most events (0.139, against 0.098 for P1). Thus the app uses E1. This is the protocol A
+  copy, `e1_a`, with the backbone of `p1_a`.
+- Consequences for milestone 8:
+  - E1 is about 7 times as costly per stream as P1. A free host has fewer CPU cores than the
+    laptop, so the number of streams there is TBD. It is measured at milestone 8.
+  - P1 stays the fallback (PLAN §7).
+  - E1 was not part of the tests under changed conditions (D37). D41 has P1, the backbone of
+    E1.
+- Limits: one laptop, and one trial per number of streams. The app reads video files. A live
+  webcam has no decoding step for a video file.
