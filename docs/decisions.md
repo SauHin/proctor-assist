@@ -1175,3 +1175,39 @@ validation subjects without a change (D37).
 - Limits: one seed per run and 4 folds, with a large std (about 0.1 for P1). The image changes
   are simulated (D40), and low light has no sensor noise. R0 detects no event under any
   condition, because its threshold is "no alarm" (D39).
+
+## D42. Milestone 7: capacity test, deployment model, and error analysis (decided by the owner in chat, 2026-11-12)
+
+The owner chose each point from a multiple-choice question in the chat, and then accepted a
+final recap (D16). The AI wrote the options and typed this record. The answers, word for
+word (the chat was in Indonesian):
+
+1. Capacity: "Load test N stream (Recommended)". N videos run at the same time through the
+   real pipeline of the app, video decoding included, on the laptop. N is the largest number
+   that keeps up with 1 s of video per second. The time of each step is also recorded. The
+   models are R0, B1, P1, E1, and E2. P1s has the architecture of P1, so it is not measured.
+2. Deployment model: "Angka validation (Recommended)". From the models that run in real time,
+   the app takes the one that detects the most events on the validation subjects of protocol
+   B, at the threshold of D37. The test numbers are reported, but they are not used for the
+   choice. If no new model beats P1, the app uses P1 (PLAN §7).
+3. Error analysis: "Per kelas & tipe OEP (Rec.)", "Aktor vs peserta asli (Rec.)", "Panjang
+   event & wajah (Rec.)", and "Lihat frame false alarm". These are: detection per class of
+   D14 and per OEP code with the confusion matrix, actors against real exam takers and per
+   subject, detection by event length, the share of frames with a face under each condition,
+   and a look at the frames of the 20 largest false alarms of P1 and E1.
+
+- Reasons, from the options that the owner chose:
+  - A load test counts the contention for CPU and memory between streams. A division of
+    1 s by the cost of one stream does not, and it gives a number that is too high.
+  - The choice on validation keeps the test numbers honest. The cost that the owner accepted:
+    validation has about 1.6 hours of video per fold, so the numbers are noisy.
+- Facts behind the options (`results/events/summary.csv`): on the validation subjects of
+  protocol B, the mean share of events detected is 0.139 for E1, 0.098 for P1, 0.050 for P1s,
+  0.042 for E2, 0.036 for B1, and 0 for R0. Thus E1 wins if it runs in real time.
+- Consequence for the app (in the recap that the owner accepted): the app uses the protocol A
+  copy of the chosen architecture. The app shows the 9 real exam takers of the test set of
+  protocol A, and only this copy did not see them in training.
+- The descriptions of the false alarm frames come from the AI. The owner checks them. The
+  frames are not committed.
+- Options that the owner did not choose: the cost of one stream divided into 1 s. A choice
+  with an extra rule on the changed conditions, or a choice on the test numbers of protocol B.

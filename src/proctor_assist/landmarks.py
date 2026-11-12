@@ -51,21 +51,40 @@ def _tools():
     )
 
 
+def empty(n_frames):
+    """Raw landmark arrays for n_frames frames, all NaN (not found)."""
+    return {
+        "face": np.full((n_frames, 478, 3), np.nan, np.float16),
+        "face_matrix": np.full((n_frames, 4, 4), np.nan, np.float32),
+        "pose": np.full((n_frames, 33, 4), np.nan, np.float16),  # x, y, z, visibility
+        "hands": np.full((n_frames, 2, 21, 3), np.nan, np.float16),  # sorted from left to right in the image
+    }
+
+
+def detect(tools, frame, raw, k):
+    """Write the landmarks of one video frame (BGR) into row k of raw. The app uses this function too."""
+    import mediapipe as mp
+
+    face_tool, hand_tool, pose_tool = tools
+    image = mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(frame[:, :, ::-1]))
+    face, hands, pose = face_tool.detect(image), hand_tool.detect(image), pose_tool.detect(image)
+    if face.face_landmarks:
+        raw["face"][k] = [(p.x, p.y, p.z) for p in face.face_landmarks[0]]
+        raw["face_matrix"][k] = np.asarray(face.facial_transformation_matrixes[0])
+    if pose.pose_landmarks:
+        raw["pose"][k] = [(p.x, p.y, p.z, p.visibility) for p in pose.pose_landmarks[0]]
+    for slot, hand in enumerate(sorted(hands.hand_landmarks, key=lambda h: h[0].x)[:2]):
+        raw["hands"][k, slot] = [(p.x, p.y, p.z) for p in hand]
+
+
 def extract(subject, n_frames, change=None, keep=None):
     """Raw landmarks of the first n_frames stored frames of one video. A part that is not found is NaN.
 
     `change(frame)` alters each frame first, for the tests under changed conditions (D40).
     `keep(k, frame)` gets stored frame k after the change.
     """
-    import mediapipe as mp
-
-    face_tool, hand_tool, pose_tool = _tools()
-    raw = {
-        "face": np.full((n_frames, 478, 3), np.nan, np.float16),
-        "face_matrix": np.full((n_frames, 4, 4), np.nan, np.float32),
-        "pose": np.full((n_frames, 33, 4), np.nan, np.float16),  # x, y, z, visibility
-        "hands": np.full((n_frames, 2, 21, 3), np.nan, np.float16),  # sorted from left to right in the image
-    }
+    tools = _tools()
+    raw = empty(n_frames)
     cap = cv2.VideoCapture(str(OEP / f"subject{subject}" / "webcam.avi"))
     i = k = 0
     while k < n_frames:
@@ -77,15 +96,7 @@ def extract(subject, n_frames, change=None, keep=None):
                 frame = change(frame)
             if keep:
                 keep(k, frame)
-            image = mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(frame[:, :, ::-1]))
-            face, hands, pose = face_tool.detect(image), hand_tool.detect(image), pose_tool.detect(image)
-            if face.face_landmarks:
-                raw["face"][k] = [(p.x, p.y, p.z) for p in face.face_landmarks[0]]
-                raw["face_matrix"][k] = np.asarray(face.facial_transformation_matrixes[0])
-            if pose.pose_landmarks:
-                raw["pose"][k] = [(p.x, p.y, p.z, p.visibility) for p in pose.pose_landmarks[0]]
-            for slot, hand in enumerate(sorted(hands.hand_landmarks, key=lambda h: h[0].x)[:2]):
-                raw["hands"][k, slot] = [(p.x, p.y, p.z) for p in hand]
+            detect(tools, frame, raw, k)
             k += 1
         i += 1
     cap.release()

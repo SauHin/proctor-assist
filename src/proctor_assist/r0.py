@@ -40,9 +40,8 @@ def head_pose(matrix):
     return math.degrees(math.atan2(r[0, 2], r[2, 2])), math.degrees(math.asin(max(-1.0, min(1.0, -r[1, 2]))))
 
 
-def read_poses(subject, n_seconds):
-    """Head pose of one frame per second of one video: columns t, face, yaw, pitch."""
-    import mediapipe as mp  # only the laptop has MediaPipe (optional extra "landmarks")
+def landmarker():
+    """The MediaPipe face landmarker of D25."""
     from mediapipe.tasks.python import BaseOptions, vision
 
     if sha256(MODEL) != MODEL_SHA256:
@@ -50,19 +49,30 @@ def read_poses(subject, n_seconds):
     options = vision.FaceLandmarkerOptions(
         base_options=BaseOptions(model_asset_path=str(MODEL)), output_facial_transformation_matrixes=True
     )
+    return vision.FaceLandmarker.create_from_options(options)
+
+
+def pose_row(tool, frame, t):
+    """The head pose of one video frame (BGR) of second t. The app uses this function too."""
+    import mediapipe as mp
+
+    found = tool.detect(mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(frame[:, :, ::-1])))
+    face = bool(found.face_landmarks)
+    yaw, pitch = head_pose(found.facial_transformation_matrixes[0]) if face else (None, None)
+    return {"t": t, "face": face, "yaw": yaw, "pitch": pitch}
+
+
+def read_poses(subject, n_seconds):
+    """Head pose of one frame per second of one video: columns t, face, yaw, pitch."""
     cap = cv2.VideoCapture(str(OEP / f"subject{subject}" / "webcam.avi"))
     rows, i = [], 0
-    with vision.FaceLandmarker.create_from_options(options) as landmarker:
+    with landmarker() as tool:  # only the laptop has MediaPipe (optional extra "landmarks")
         while len(rows) < n_seconds:
             ok, frame = cap.read()
             if not ok:
                 break
             if i % frames.VIDEO_FPS == FRAME_IN_SECOND:
-                rgb = np.ascontiguousarray(frame[:, :, ::-1])
-                found = landmarker.detect(mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb))
-                face = bool(found.face_landmarks)
-                yaw, pitch = head_pose(found.facial_transformation_matrixes[0]) if face else (None, None)
-                rows.append({"t": i // frames.VIDEO_FPS, "face": face, "yaw": yaw, "pitch": pitch})
+                rows.append(pose_row(tool, frame, i // frames.VIDEO_FPS))
             i += 1
     cap.release()
     return pd.DataFrame(rows)
