@@ -1108,3 +1108,70 @@ These are AI choices inside D37. They are easy to change. Code: `proctor_assist.
 - The extraction runs with 6 processes. Measured on the laptop: P1 needs about 17 ms and B1
   about 16 ms per frame in a batch of 256 (8 threads). These are single measurements, not the
   compute results of milestone 7.
+
+## D41. Finding: blur hurts all models, and low light breaks B1 (2026-11-12)
+
+This entry is a result, not a choice. All numbers come from `results/conditions/summary.csv`
+and `results/conditions/protocol_b.csv`. They were computed on the laptop CPU with the code of
+D40 (git 3744ef3, see `results/conditions/run.json`). The test subjects of the 4 folds of
+protocol B have 441 events in 6.58 hours. Each model keeps the threshold that it got from its
+validation subjects without a change (D37).
+
+- Check of the condition "none": it gives the same detected share and false alarms per hour as
+  D39 for all 4 models. Against the saved scores, the largest difference in P(no cheat) is
+  0.0087 for P1 and 0.0020 for B1 (CPU against GPU). For R0 and E2 it is 0.000005, which is the
+  rounding to 5 decimals of the score files.
+- ROC-AUC for "cheat" per second (mean over the 4 folds, std in brackets):
+
+  | Condition | R0 | B1 | P1 | E2 |
+  |---|---|---|---|---|
+  | none | 0.650 (0.048) | 0.638 (0.044) | 0.694 (0.108) | 0.612 (0.042) |
+  | low_light_moderate | 0.645 (0.052) | 0.527 (0.077) | 0.719 (0.115) | 0.613 (0.038) |
+  | low_light_strong | 0.640 (0.048) | 0.450 (0.057) | 0.632 (0.066) | 0.621 (0.027) |
+  | blur_moderate | 0.588 (0.027) | 0.520 (0.072) | 0.591 (0.112) | 0.545 (0.022) |
+  | blur_strong | 0.497 (0.020) | 0.481 (0.044) | 0.559 (0.085) | 0.495 (0.010) |
+  | jpeg_moderate | 0.638 (0.053) | 0.633 (0.057) | 0.685 (0.099) | 0.615 (0.038) |
+  | jpeg_strong | 0.625 (0.072) | 0.638 (0.066) | 0.684 (0.066) | 0.546 (0.062) |
+  | fps_moderate | 0.651 (0.052) | 0.637 (0.044) | 0.694 (0.109) | 0.612 (0.042) |
+  | fps_strong | 0.656 (0.055) | 0.635 (0.047) | 0.691 (0.107) | 0.605 (0.037) |
+
+- Test events detected / test false alarms per hour (mean over the 4 folds), with the threshold
+  from validation without a change:
+
+  | Condition | R0 | B1 | P1 | E2 |
+  |---|---|---|---|---|
+  | none | 0.000 / 0.00 | 0.198 / 18.08 | 0.099 / 4.85 | 0.016 / 1.12 |
+  | low_light_moderate | 0.000 / 0.00 | 0.671 / 56.30 | 0.046 / 2.36 | 0.016 / 0.80 |
+  | low_light_strong | 0.000 / 0.00 | 0.790 / 37.85 | 0.086 / 18.23 | 0.021 / 0.52 |
+  | blur_moderate | 0.000 / 0.00 | 0.414 / 41.99 | 0.050 / 7.22 | 0.005 / 1.20 |
+  | blur_strong | 0.000 / 0.00 | 0.407 / 42.40 | 0.000 / 0.00 | 0.003 / 1.38 |
+  | jpeg_moderate | 0.000 / 0.00 | 0.202 / 26.94 | 0.089 / 4.45 | 0.009 / 0.32 |
+  | jpeg_strong | 0.000 / 0.00 | 0.356 / 36.61 | 0.076 / 6.71 | 0.007 / 0.98 |
+  | fps_moderate | 0.000 / 0.00 | 0.189 / 17.36 | 0.092 / 4.20 | 0.019 / 1.12 |
+  | fps_strong | 0.000 / 0.00 | 0.187 / 19.70 | 0.089 / 4.36 | 0.024 / 1.12 |
+
+- Blur is the hardest condition. At strong blur, the ROC-AUC of R0, B1, and E2 is about 0.5,
+  the level of chance. P1 keeps 0.559, but its scores stay below the threshold, so it gives no
+  alarm in any fold. R0 and E2 read MediaPipe landmarks. Blur probably makes the landmarks less
+  exact or makes the face detection fail. Not verified: the share of frames with a face under
+  each condition is not measured yet.
+- Low light breaks B1. Its ROC-AUC drops to 0.527 and 0.450 (below chance), and it gives 56.30
+  and 37.85 false alarms per hour. Its high detected share comes from alarms in most seconds,
+  not from better detection. At strong low light, B1 detects all events on folds 1, 3, and 4,
+  with 40.6 to 51.8 false alarms per hour.
+- P1 keeps its ROC-AUC at moderate low light (0.719) and drops to 0.632 at strong low light.
+  There its false alarms rise to 18.23 per hour. R0 and E2 change little under low light.
+- JPEG compression: P1 and B1 keep their ROC-AUC, but the false alarms of B1 rise to 26.94 and
+  36.61 per hour. E2 drops to 0.546 at quality 7.
+- Lower frame rate: the ROC-AUC of each model changes by at most 0.007. This is expected,
+  because the target is per second, and P1, B1, and R0 read one frame per second.
+- P1 has the highest ROC-AUC of the 4 models under 8 of the 9 conditions. Under strong low
+  light, R0 is higher (0.640 against 0.632).
+- Reading: a changed camera shifts the scores. Thus the threshold from clean validation is the
+  weak point, and the false alarms per hour change more than the ROC-AUC. Example: under strong
+  JPEG, B1 keeps a ROC-AUC of 0.638, but its false alarms go from 18.08 to 36.61 per hour.
+- A possible step for the app (milestone 8, not decided): a warning to the proctor when the
+  video is dark or blurred.
+- Limits: one seed per run and 4 folds, with a large std (about 0.1 for P1). The image changes
+  are simulated (D40), and low light has no sensor noise. R0 detects no event under any
+  condition, because its threshold is "no alarm" (D39).
